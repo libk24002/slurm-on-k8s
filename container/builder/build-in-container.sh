@@ -9,5 +9,5 @@ podman run --rm \
     --privileged \
     -e OS_BASE_IMAGE=docker.io/library/debian:bookworm \
     -e IMAGE_NAME=localhost/ay-dev/slurm-builder:latest \
-    -it m.zjvis.net/quay.io/containers/buildah:v1.35.4 \
+    -it quay.io/containers/buildah:v1.35.4 \
     bash /code/slurm/container/builder/build.sh

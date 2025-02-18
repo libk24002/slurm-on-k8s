@@ -9,6 +9,6 @@ podman run --rm \
     --privileged \
     -e BUILDER_IMAGE=localhost/ay-dev/slurm-builder:latest \
     -e OS_BASE_IMAGE=localhost/ay-dev/slurm-base:latest \
-    -it m.zjvis.net/quay.io/containers/buildah:v1.35.4 \
+    -it quay.io/containers/buildah:v1.35.4 \
     bash /code/slurm/container/login/build-openmpi.sh
 

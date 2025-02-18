@@ -19,8 +19,7 @@ auth:
         authorizedKeys: authorized_keys
     configmap:
       name: slurm-ssh-auth-keys
-      prefabPubKeys: ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDL16X4q1ODC8ZvbWGDM+VKtMoX0q8b0vxMpCq2nT0KIpR/KLE+n4vj8CgQOeOP8TVnXU89JNfaPbqwSnpdkfjDvXrmdJ+QwG4fmralTXwkcTc4hPmtlHuB1A++o//phhD0DYeM1xKYJuI+XKCHsFCGpQYIEaaXrHeHCPGuH6/HMTbFm0kFa9rebH4qFQDm3o+uJLRHw4rQAOQwiHiriq9PzT9LdZDHmmMmq7GS09t9ZgL2LtWCBcAG0Fry1n612W23mpHFPV8x9i8xyRxYgcDNSfSa7XvIfrlF8RMgD4bL7RXWOry8UVw5EPzuhl6QQutZsUGEIINF9IgVkM2Ehrb2Q3B0TqlEx6L5e1hUhFOskdE6XX90BZ6zPNf0BktU/aB2Jp8NDXqwvRJEX4cNPMiYNDkvD7yKw0iN1+ZqbHVqZX+bzDdB1obbNVgrSJ9dQrN2svD+DqTzPbwY4vb9IXWujikKD1Jkd1FET8frw+vJuSgN8uZ1MJaoRoatFnoe2avm2YL6IRGjlyPypc1/B882ufz6zQclMsIegy0YnmVLYH3uawwQhlWIlDqbXmGPRUHtB7AJxYJHqTdbCvMhtGX2s1B0cR4Ai+5izOb2Hkfi0qui6ZxpCBnRDRJ5EEHYvy5Kwy22+GC46sWr3wU7aM2ZijMAVsg6y/qlBhBGbWSFnQ== byang628@zhejianglab.org"]
-
+      prefabPubKeys: ["ssh-rsa sample_public_key"]
 persistence:
   shared:
     enabled: true

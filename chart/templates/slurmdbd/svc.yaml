@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.slurmdbd.service.name }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels:
+    {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmdbd.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: slurmdbd
+spec:
+  type: ClusterIP
+  clusterIP: None
+  {{- if .Values.slurmctld.service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ .Values.slurmctld.service.publishNotReadyAddresses }}
+  {{- end }}
+  {{- if .Values.slurmdbd.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.slurmdbd.service.sessionAffinity }}
+  {{- end }}
+  {{- if .Values.slurmdbd.service.sessionAffinityConfig }}
+  sessionAffinityConfig: {{- include "common.tplvalues.render" (dict "value" .Values.slurmdbd.service.sessionAffinityConfig "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if or (eq .Values.slurmdbd.service.type "LoadBalancer") (eq .Values.slurmdbd.service.type "NodePort") }}
+  externalTrafficPolicy: {{ .Values.slurmdbd.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.slurmdbd.service.type "LoadBalancer") (not (empty .Values.slurmdbd.service.loadBalancerSourceRanges)) }}
+  loadBalancerSourceRanges: {{- toYaml .Values.slurmdbd.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- if and (eq .Values.slurmdbd.service.type "LoadBalancer") (not (empty .Values.slurmdbd.service.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.slurmdbd.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.slurmdbd.service.type "LoadBalancer") .Values.slurmdbd.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.slurmdbd.service.loadBalancerClass }}
+  {{- end }}
+  ports:
+    {{- if .Values.slurmdbd.service.ssh.port }}
+    - name: ssh
+      port: {{ .Values.slurmdbd.service.ssh.port }}
+      targetPort: {{ .Values.slurmdbd.service.ssh.targetPort }}
+    {{- end }}
+    {{- if .Values.slurmdbd.service.slurmdbd }}
+    - name: slurmdbd
+      port: {{ .Values.slurmdbd.service.slurmdbd.port }}
+      targetPort: {{ .Values.slurmdbd.service.slurmdbd.targetPort }}
+    {{- end }}
+    {{- if .Values.slurmdbd.service.extraPorts }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.slurmdbd.service.extraPorts "context" $) | nindent 4 }}
+    {{- end }}
+  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.slurmdbd.podLabels .Values.slurmdbd.commonLabels ) "context" . ) }}
+  selector: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: slurmdbd

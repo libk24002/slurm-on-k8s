@@ -1,0 +1,49 @@
+ARG OS_BASE_IMAGE=localhost/ay-dev/slurm-base:latest
+FROM ${OS_BASE_IMAGE}
+
+ARG SLURM_VERSION=24.05.3
+ARG MPI_TYPE=opem-mpi
+ARG BUILDER_IMAGE=localhost/ay-dev/slurm-builder:latest
+COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-client-dbgsym_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-client-dbgsym_${SLURM_VERSION}-1_amd64.deb
+COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-client_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-client_${SLURM_VERSION}-1_amd64.deb
+COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-slurmd-dbgsym_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-slurmd-dbgsym_${SLURM_VERSION}-1_amd64.deb
+COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-slurmd_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-slurmd_${SLURM_VERSION}-1_amd64.deb
+COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-slurmdbd-dbgsym_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-slurmdbd-dbgsym_${SLURM_VERSION}-1_amd64.deb
+COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-slurmdbd_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-slurmdbd_${SLURM_VERSION}-1_amd64.deb
+
+RUN apt install -y curl vim build-essential cmake gcc-11 g++-11 gfortran 
+
+RUN if [ "$MPI_TYPE" = "open-mpi" ]; then \
+        apt install -y vim libopenmpi-dev; \
+    elif [ "$MPI_TYPE" = "intel-mpi" ]; then \
+        curl -o intel-mpi-2021.14.1.7_offline.sh -L http://ay-dev.oss-cn-hangzhou-zjy-d01-a.res.cloud.zhejianglab.com/projects%2Fslurm-on-k8s%2Fintel-mpi-libs%2Fintel-mpi-2021.14.1.7_offline.sh \
+        && bash intel-mpi-2021.14.1.7_offline.sh -s -a -s --eula accept \
+        && rm -rf intel-mpi-2021.14.1.7_offline.sh； \
+    else \
+        echo "you need to spcify ENV 'MPI_TYPE', either 'open-mpi' or 'intel-mpi'"; \
+    fi
+
+ENV MPI_TYPE=${MPI_TYPE}
+RUN curl -o intel-dpcpp-cpp-compiler-2025.0.4.20_offline.sh http://ay-dev.oss-cn-hangzhou-zjy-d01-a.res.cloud.zhejianglab.com/projects%2Fslurm-on-k8s%2Fintel-mpi-libs%2Fintel-dpcpp-cpp-compiler-2025.0.4.20_offline.sh
+RUN bash intel-dpcpp-cpp-compiler-2025.0.4.20_offline.sh -s -a -s --eula accept
+
+ENV PATH="/opt/intel/oneapi/compiler/2025.0/bin:${PATH}"
+RUN rm -rf intel-dpcpp-cpp-compiler-2025.0.4.20_offline.sh
+
+RUN curl -o intel-fortran-compiler-2025.0.4.21_offline.sh http://ay-dev.oss-cn-hangzhou-zjy-d01-a.res.cloud.zhejianglab.com/projects%2Fslurm-on-k8s%2Fintel-mpi-libs%2Fintel-fortran-compiler-2025.0.4.21_offline.sh
+RUN bash intel-fortran-compiler-2025.0.4.21_offline.sh -s -a -s --eula accept
+
+RUN rm -rf intel-fortran-compiler-2025.0.4.21_offline.sh
+
+
+RUN apt install -y /opt/slurm/debs/slurm-smd-slurmd-dbgsym_${SLURM_VERSION}-1_amd64.deb \
+    /opt/slurm/debs/slurm-smd-slurmd_${SLURM_VERSION}-1_amd64.deb \
+    /opt/slurm/debs/slurm-smd-slurmdbd-dbgsym_${SLURM_VERSION}-1_amd64.deb \
+    /opt/slurm/debs/slurm-smd-slurmdbd_${SLURM_VERSION}-1_amd64.deb \
+    /opt/slurm/debs/slurm-smd-client-dbgsym_${SLURM_VERSION}-1_amd64.deb \
+    /opt/slurm/debs/slurm-smd-client_${SLURM_VERSION}-1_amd64.deb
+
+COPY entrypoint.sh /opt/slurm/entrypoint.sh
+RUN chmod 755 /opt/slurm/entrypoint.sh
+
+CMD ["/opt/slurm/entrypoint.sh"]

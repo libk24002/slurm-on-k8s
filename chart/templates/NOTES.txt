@@ -1,0 +1,13 @@
+
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+** Please be patient while the slurm chart is being deployed **
+
+Slurm Cluster will contains 
+  {{ .Values.slurmctld.replicaCount }} manager node (slurmctld)
+  {{ .Values.slurmd.replicaCount }} worker nodes (slurmd)
+  {{ .Values.login.replicaCount }} login node
+  {{ .Values.slurmdbd.replicaCount }} database node (slurmdbd)
+

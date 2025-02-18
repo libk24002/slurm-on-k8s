@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.slurmctld.service.name }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels:
+  {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmctld.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: slurmctld
+spec:
+  type: ClusterIP
+  clusterIP: None
+  {{- if .Values.slurmctld.service.publishNotReadyAddresses }}
+  publishNotReadyAddresses: {{ .Values.slurmctld.service.publishNotReadyAddresses }}
+  {{- end }}
+  {{- if .Values.slurmctld.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.slurmctld.service.sessionAffinity }}
+  {{- end }}
+  {{- if .Values.slurmctld.service.sessionAffinityConfig }}
+  sessionAffinityConfig: {{- include "common.tplvalues.render" (dict "value" .Values.slurmctld.service.sessionAffinityConfig "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if or (eq .Values.slurmctld.service.type "LoadBalancer") (eq .Values.slurmctld.service.type "NodePort") }}
+  externalTrafficPolicy: {{ .Values.slurmctld.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.slurmctld.service.type "LoadBalancer") (not (empty .Values.slurmctld.service.loadBalancerSourceRanges)) }}
+  loadBalancerSourceRanges: {{- toYaml .Values.slurmctld.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  {{- if and (eq .Values.slurmctld.service.type "LoadBalancer") (not (empty .Values.slurmctld.service.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.slurmctld.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.slurmctld.service.type "LoadBalancer") .Values.slurmctld.service.loadBalancerClass }}
+  loadBalancerClass: {{ .Values.slurmctld.service.loadBalancerClass }}
+  {{- end }}
+  ports:
+    {{- if .Values.slurmctld.service.ssh.port }}
+    - name: ssh
+      port: {{ .Values.slurmctld.service.ssh.port }}
+      targetPort: {{ .Values.slurmctld.service.ssh.targetPort }}
+    {{- end }}
+    {{- if .Values.slurmctld.service.slurmctld }}
+    - name: slurmctld
+      port: {{ .Values.slurmctld.service.slurmctld.port }}
+      targetPort: {{ .Values.slurmctld.service.slurmctld.targetPort }}
+    {{- end }}
+    {{- if .Values.slurmctld.service.extraPorts }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.slurmctld.service.extraPorts "context" $) | nindent 4 }}
+    {{- end }}
+  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.slurmctld.podLabels .Values.slurmctld.commonLabels ) "context" . ) }}
+  selector: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: slurmctld

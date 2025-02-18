@@ -2,28 +2,16 @@
 
 ### slurm configuration generator [click](https://slurm.schedmd.com/configurator.html)
 
-### build images in container
-
-```shell
-bash slurm/container/builder/build-in-container.sh
-bash slurm/container/base/build-in-container.sh
-bash slurm/container/munged/build-in-container.sh
-bash slurm/container/login/build-openmpi-in-container.sh
-bash slurm/container/slurmctld/build-in-container.sh
-bash slurm/container/slurmd/build-openmpi-in-container.sh
-bash slurm/container/slurmdbd/build-in-container.sh
-```
-
 ### build images
 
 ```shell
-bash slurm/container/builder/build.sh
-bash slurm/container/base/build.sh
-bash slurm/container/munged/build.sh
-MPI_TYPE=open-mpi bash slurm/container/login/build.sh
-bash slurm/container/slurmctld/build.sh
-MPI_TYPE=open-mpi bash slurm/container/slurmd/build.sh
-bash slurm/container/slurmdbd/build.sh
+bash ./container/builder/build.sh
+bash ./container/base/build.sh
+bash ./container/munged/build.sh
+MPI_TYPE=open-mpi bash ./container/login/build.sh
+bash ./container/slurmctld/build.sh
+MPI_TYPE=open-mpi bash ./container/slurmd/build.sh
+bash ./container/slurmdbd/build.sh
 ```
 
 ### build Intel MPI images

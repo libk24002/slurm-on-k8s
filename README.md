@@ -1,5 +1,3 @@
-## Slurm on K8s
-
 ### Prerequisites
 - kubectl version v1.11.3+.
 - buildah version v1.33.10+

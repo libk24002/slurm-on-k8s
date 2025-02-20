@@ -1,9 +1,21 @@
+annotations:
+  category: Infrastructure
 apiVersion: v2
+appVersion: 1.23.3
 name: slurm
 description: A Helm chart for Slurm Cluster
-type: application
 version: 1.0.2
-appVersion: "1.0.1"
+home: https://github.com/AaronYang0628/slurm-on-k8s/tree/main/chart
+icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+keywords:
+- slurm
+- hpc
+- k8s
+maintainers:
+- name: Aaron Yang
+  url: https://github.com/AaronYang0628
+sources:
+- https://github.com/AaronYang0628/slurm-on-k8s/tree/main/chart
 dependencies:
   - name: common
     version: 2.22.0

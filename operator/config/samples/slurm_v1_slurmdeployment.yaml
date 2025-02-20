@@ -1,0 +1,17 @@
+apiVersion: slurm.ay.dev/v1
+kind: SlurmDeployment
+metadata:
+  labels:
+    app.kubernetes.io/name: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: slurmdeployment-sample
+spec:
+  chart:
+    name: nginx
+    repository: https://charts.bitnami.com/bitnami
+    version: 13.2.20
+    namespace: default
+  values:
+    service:
+      type: ClusterIP
+    replicaCount: 3

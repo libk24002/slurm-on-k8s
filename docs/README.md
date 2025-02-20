@@ -1,3 +1,5 @@
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/slurm-on-k8s)](https://artifacthub.io/packages/search?repo=slurm-on-k8s)
+
 ### Prerequisites
 - kubectl version v1.11.3+.
 - buildah version v1.33.10+

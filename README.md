@@ -1,4 +1,4 @@
-## Slurm on K8s
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/slurm-on-k8s)](https://artifacthub.io/packages/search?repo=slurm-on-k8s)
 
 ### Prerequisites
 - kubectl version v1.11.3+.
@@ -22,11 +22,10 @@ Slurm on Kubernetes provides the following features:
 
 > if you wanna change slurm configuration ,please check slurm configuration generator [click](https://slurm.schedmd.com/configurator.html)
 
-- for user
+- for helm user
     > just run for fun!
-    1. download helm chart `wget -O slurm-1.0.2.tgz https://github.com/AaronYang0628/slurm-on-k8s/releases/download/slurm-on-k8s/slurm-1.0.2.tgz`
-    2. update `values.yaml`
-    3. and exec `helm install slurm /tmp/slurm-1.0.2.tgz`
+    1. `helm repo add slurm-on-k8s https://aaronyang0628.github.io/slurm-on-k8s/`
+    2. `helm install slurm slurm-on-k8s --version 1.0.2`
 
 - for developer
     > you might need to build your own images or chart

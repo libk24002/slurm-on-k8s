@@ -6,7 +6,7 @@ name: slurm
 description: A Helm chart for Slurm Cluster
 version: 1.0.2
 home: https://github.com/AaronYang0628/slurm-on-k8s/tree/main/chart
-icon: https://bitnami.com/assets/stacks/nginx/img/nginx-stack-220x234.png
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Slurm_logo.svg/262px-Slurm_logo.svg.png
 keywords:
 - slurm
 - hpc

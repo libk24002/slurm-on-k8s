@@ -33,26 +33,41 @@ spec:
         name: slurm-shared-storage
         storageClass: ""
         size: 8Gi
-    imgae:
-      pullPolicy: IfNotPresent
-      pullSecrets: []
-      registry: "docker-registry.lab.zverse.space"
     munged:
       image:
+        registry: "docker-registry.lab.zverse.space"
         repository: data-and-computing/slurm-munged
         tag: :intelmpi-250208-r0
+        pullPolicy: IfNotPresent
+        pullSecrets: []
+      checkDns:
+        image:
+          registry: docker.io
+          repository: library/busybox
+          tag: 1.37.0-glibc
+          pullPolicy: IfNotPresent
+          pullSecrets: []
     slurmdbd:
       image:
+        registry: "docker-registry.lab.zverse.space"
         repository: data-and-computing/slurm-slurmdbd
         tag: :intelmpi-250208-r0
+        pullPolicy: IfNotPresent
+        pullSecrets: []
     slurmctld:
       image:
+        registry: "docker-registry.lab.zverse.space"
         repository: data-and-computing/slurm-slurmctld
         tag: :intelmpi-250208-r0
+        pullPolicy: IfNotPresent
+        pullSecrets: []
     login:
       image:
+        registry: "docker-registry.lab.zverse.space"
         repository: data-and-computing/slurm-login
         tag: :intelmpi-250208-r0
+        pullPolicy: IfNotPresent
+        pullSecrets: []
       resources: 
         limits:
           cpu: 6
@@ -62,15 +77,16 @@ spec:
           cpu: 1
           ephemeral-storage: 8Gi
           memory: 1Gi
-      command: []
-      args: []
       extraVolumes: []
       extraVolumeMounts: []
     slurmd:
       replicas: 1
       image:
+        registry: "docker-registry.lab.zverse.space"
         repository: data-and-computing/slurm-slurmd
         tag: :intelmpi-250208-r0
+        pullPolicy: IfNotPresent
+        pullSecrets: []
       resources: 
         requests:
           cpu: 2

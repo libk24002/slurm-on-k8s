@@ -59,17 +59,490 @@ type SlurmDeploymentReconciler struct {
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 
+func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
+	values := map[string]interface{}{
+		"nameOverride":      r.Spec.Values.NameOverride,
+		"fullnameOverride":  r.Spec.Values.FullnameOverride,
+		"commonAnnotations": r.Spec.Values.CommonAnnotations,
+		"commonLables":      r.Spec.Values.CommonLables,
+		"mariadb": map[string]interface{}{
+			"enabled": r.Spec.Values.Mariadb.Enabled,
+			"port":    r.Spec.Values.Mariadb.Port,
+			"auth": map[string]interface{}{
+				"username": r.Spec.Values.Mariadb.Auth.Username,
+				"password": r.Spec.Values.Mariadb.Auth.Password,
+				"database": r.Spec.Values.Mariadb.Auth.DatabaseName,
+			},
+			"primary": map[string]interface{}{
+				"persistence": map[string]interface{}{
+					"enabled":      r.Spec.Values.Mariadb.Primary.Persistence.Enabled,
+					"storageClass": r.Spec.Values.Mariadb.Primary.Persistence.StorageClass,
+					"size":         r.Spec.Values.Mariadb.Primary.Persistence.Size,
+				},
+			},
+		},
+		"auth": map[string]interface{}{
+			"ssh": map[string]interface{}{
+				"secret": map[string]interface{}{
+					"name": r.Spec.Values.Auth.SSH.Secret.Name,
+					"keys": map[string]interface{}{
+						"public":         r.Spec.Values.Auth.SSH.Secret.Keys.Public,
+						"private":        r.Spec.Values.Auth.SSH.Secret.Keys.Private,
+						"authorizedKeys": r.Spec.Values.Auth.SSH.Secret.Keys.AuthorizedKeys,
+					},
+				},
+				"configMap": map[string]interface{}{
+					"name":          r.Spec.Values.Auth.SSH.ConfigMap.Name,
+					"prefabPubKeys": r.Spec.Values.Auth.SSH.ConfigMap.PrefabPubKeys,
+				},
+			},
+		},
+		"persistence": map[string]interface{}{
+			"shared": map[string]interface{}{
+				"enabled":       r.Spec.Values.Persistence.Shared.Enabled,
+				"name":          r.Spec.Values.Persistence.Shared.Name,
+				"existingClaim": r.Spec.Values.Persistence.Shared.ExistingClaim,
+				"accessModes":   r.Spec.Values.Persistence.Shared.AccessModes,
+				"storageClass":  r.Spec.Values.Persistence.Shared.StorageClass,
+				"size":          r.Spec.Values.Persistence.Shared.Size,
+			},
+		},
+		"resourcesPreset": "small",
+		"munged": map[string]interface{}{
+			"enabled":      true,
+			"commonLabels": []string{},
+			"image": map[string]interface{}{
+				"registry":    r.Spec.Values.Munged.Image.Registry,
+				"repository":  r.Spec.Values.Munged.Image.Repository,
+				"tag":         r.Spec.Values.Munged.Image.Tag,
+				"pullPolicy":  r.Spec.Values.Munged.Image.PullPolicy,
+				"pullSecrets": r.Spec.Values.Munged.Image.PullSecrets,
+			},
+			"diagnoticMode": map[string]interface{}{
+				"enabled": r.Spec.Values.Munged.DiagnosticMode.Enabled,
+				"command": r.Spec.Values.Munged.DiagnosticMode.Command,
+				"args":    r.Spec.Values.Munged.DiagnosticMode.Args,
+			},
+			"extraVolumes":      r.Spec.Values.Munged.ExtraVolumes,
+			"extraVolumeMounts": r.Spec.Values.Munged.ExtraVolumeMounts,
+		},
+		"slurmctld": map[string]interface{}{
+			"name":         r.Spec.Values.Slurmctld.Name,
+			"commonLabels": []string{},
+			"replicaCount": r.Spec.Values.Slurmctld.ReplicaCount,
+			"image": map[string]interface{}{
+				"registry":    r.Spec.Values.Slurmctld.Image.Registry,
+				"repository":  r.Spec.Values.Slurmctld.Image.Repository,
+				"tag":         r.Spec.Values.Slurmctld.Image.Tag,
+				"pullPolicy":  r.Spec.Values.Slurmctld.Image.PullPolicy,
+				"pullSecrets": r.Spec.Values.Slurmctld.Image.PullSecrets,
+			},
+			"checkDns": map[string]interface{}{
+				"image": map[string]interface{}{
+					"registry":    r.Spec.Values.Slurmctld.CheckDNS.Image.Registry,
+					"repository":  r.Spec.Values.Slurmctld.CheckDNS.Image.Repository,
+					"tag":         r.Spec.Values.Slurmctld.CheckDNS.Image.Tag,
+					"pullPolicy":  r.Spec.Values.Slurmctld.CheckDNS.Image.PullPolicy,
+					"pullSecrets": r.Spec.Values.Slurmctld.CheckDNS.Image.PullSecrets,
+				},
+			},
+			"diagnoticMode": map[string]interface{}{
+				"enabled": r.Spec.Values.Slurmctld.DiagnosticMode.Enabled,
+				"command": r.Spec.Values.Slurmctld.DiagnosticMode.Command,
+				"args":    r.Spec.Values.Slurmctld.DiagnosticMode.Args,
+			},
+			"automountServiceAccountToken": false,
+			"podLabels":                    map[string]string{},
+			"affinity":                     map[string]string{},
+			"podAnnatations":               map[string]string{},
+			"podAntiAffinityPreset":        "soft",
+			"nodeAffinityPreset": map[string]interface{}{
+				"type":   "",
+				"key":    "",
+				"values": []string{},
+			},
+			"hostNetwork":               false,
+			"dnsPolicy":                 "",
+			"dnsConfig":                 map[string]string{},
+			"hostIPC":                   false,
+			"priorityClassName":         "",
+			"nodeSelector":              map[string]string{},
+			"tolerations":               []string{},
+			"schedulerName":             "",
+			"topologySpreadConstraints": []string{},
+			"podSecurityContext": map[string]interface{}{
+				"enabled":             false,
+				"fsGroup":             0,
+				"fsGroupChangePolicy": "Always",
+				"supplementalGroups":  []string{},
+			},
+			"terminationGracePeriodSeconds": "",
+			"hostAliases":                   []string{},
+			"extraEnvVars":                  []string{},
+			"extraEnvVarsCM":                "",
+			"extraEnvVarsSecret":            "",
+			"revisionHistoryLimit":          10,
+			"updateStrategy": map[string]interface{}{
+				"type":          "RollingUpdate",
+				"rollingUpdate": map[string]string{},
+			},
+			"lifecycleHooks":    map[string]string{},
+			"resources":         map[string]string{},
+			"extraVolumes":      r.Spec.Values.Slurmctld.ExtraVolumes,
+			"extraVolumeMounts": r.Spec.Values.Slurmctld.ExtraVolumeMounts,
+			"livenessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"startupProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"readinessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"service": map[string]interface{}{
+				"name": "slurmctld-headless",
+				"ssh": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       22,
+					"targetPort": 22,
+				},
+				"slurmctld": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       6817,
+					"targetPort": 6817,
+				},
+			},
+		},
+		"slurmd": map[string]interface{}{
+			"name":         r.Spec.Values.Slurmd.Name,
+			"commonLabels": []string{},
+			"replicaCount": r.Spec.Values.Slurmd.ReplicaCount,
+			"image": map[string]interface{}{
+				"registry":    r.Spec.Values.Slurmd.Image.Registry,
+				"repository":  r.Spec.Values.Slurmd.Image.Repository,
+				"tag":         r.Spec.Values.Slurmd.Image.Tag,
+				"pullPolicy":  r.Spec.Values.Slurmd.Image.PullPolicy,
+				"pullSecrets": r.Spec.Values.Slurmd.Image.PullSecrets,
+			},
+			"diagnoticMode": map[string]interface{}{
+				"enabled": r.Spec.Values.Slurmd.DiagnosticMode.Enabled,
+				"command": r.Spec.Values.Slurmd.DiagnosticMode.Command,
+				"args":    r.Spec.Values.Slurmd.DiagnosticMode.Args,
+			},
+			"automountServiceAccountToken": false,
+			"podLabels":                    map[string]string{},
+			"affinity":                     map[string]string{},
+			"podAnnatations":               map[string]string{},
+			"podAntiAffinityPreset":        "soft",
+			"nodeAffinityPreset": map[string]interface{}{
+				"type":   "",
+				"key":    "",
+				"values": []string{},
+			},
+			"hostNetwork":               false,
+			"dnsPolicy":                 "",
+			"dnsConfig":                 map[string]string{},
+			"hostIPC":                   false,
+			"priorityClassName":         "",
+			"nodeSelector":              map[string]string{},
+			"tolerations":               []string{},
+			"schedulerName":             "",
+			"topologySpreadConstraints": []string{},
+			"podSecurityContext": map[string]interface{}{
+				"enabled":             false,
+				"fsGroup":             0,
+				"fsGroupChangePolicy": "Always",
+				"supplementalGroups":  []string{},
+			},
+			"terminationGracePeriodSeconds": "",
+			"hostAliases":                   []string{},
+			"extraEnvVars":                  []string{},
+			"extraEnvVarsCM":                "",
+			"extraEnvVarsSecret":            "",
+			"revisionHistoryLimit":          10,
+			"updateStrategy": map[string]interface{}{
+				"type":          "RollingUpdate",
+				"rollingUpdate": map[string]string{},
+			},
+			"lifecycleHooks": map[string]string{},
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{
+					"cpu":               r.Spec.Values.Slurmd.Resources.Requests.CPU,
+					"memory":            r.Spec.Values.Slurmd.Resources.Requests.Memory,
+					"ephemeral-storage": r.Spec.Values.Slurmd.Resources.Requests.EphemeralStorage,
+				},
+			},
+			"extraVolumes":      r.Spec.Values.Slurmd.ExtraVolumes,
+			"extraVolumeMounts": r.Spec.Values.Slurmd.ExtraVolumeMounts,
+			"livenessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"startupProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"readinessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"service": map[string]interface{}{
+				"name": "slurmd-headless",
+				"ssh": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       22,
+					"targetPort": 22,
+				},
+				"slurmd": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       6818,
+					"targetPort": 6818,
+				},
+			},
+		},
+		"slurmdbd": map[string]interface{}{
+			"name":         r.Spec.Values.Slurmdbd.Name,
+			"commonLabels": []string{},
+			"replicaCount": 1,
+			"image": map[string]interface{}{
+				"registry":    r.Spec.Values.Slurmdbd.Image.Registry,
+				"repository":  r.Spec.Values.Slurmdbd.Image.Repository,
+				"tag":         r.Spec.Values.Slurmdbd.Image.Tag,
+				"pullPolicy":  r.Spec.Values.Slurmdbd.Image.PullPolicy,
+				"pullSecrets": r.Spec.Values.Slurmdbd.Image.PullSecrets,
+			},
+			"diagnoticMode": map[string]interface{}{
+				"enabled": r.Spec.Values.Slurmdbd.DiagnosticMode.Enabled,
+				"command": r.Spec.Values.Slurmdbd.DiagnosticMode.Command,
+				"args":    r.Spec.Values.Slurmdbd.DiagnosticMode.Args,
+			},
+			"automountServiceAccountToken": false,
+			"podLabels":                    map[string]string{},
+			"affinity":                     map[string]string{},
+			"podAnnatations":               map[string]string{},
+			"podAntiAffinityPreset":        "soft",
+			"nodeAffinityPreset": map[string]interface{}{
+				"type":   "",
+				"key":    "",
+				"values": []string{},
+			},
+			"hostNetwork":               false,
+			"dnsPolicy":                 "",
+			"dnsConfig":                 map[string]string{},
+			"hostIPC":                   false,
+			"priorityClassName":         "",
+			"nodeSelector":              map[string]string{},
+			"tolerations":               []string{},
+			"schedulerName":             "",
+			"topologySpreadConstraints": []string{},
+			"podSecurityContext": map[string]interface{}{
+				"enabled":             false,
+				"fsGroup":             0,
+				"fsGroupChangePolicy": "Always",
+				"supplementalGroups":  []string{},
+			},
+			"terminationGracePeriodSeconds": "",
+			"hostAliases":                   []string{},
+			"extraEnvVars":                  []string{},
+			"extraEnvVarsCM":                "",
+			"extraEnvVarsSecret":            "",
+			"revisionHistoryLimit":          10,
+			"updateStrategy": map[string]interface{}{
+				"type":          "RollingUpdate",
+				"rollingUpdate": map[string]string{},
+			},
+			"lifecycleHooks":    map[string]string{},
+			"extraVolumes":      r.Spec.Values.Slurmdbd.ExtraVolumes,
+			"extraVolumeMounts": r.Spec.Values.Slurmdbd.ExtraVolumeMounts,
+			"livenessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"startupProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"readinessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"service": map[string]interface{}{
+				"name": "slurmdbd-headless",
+				"ssh": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       22,
+					"targetPort": 22,
+				},
+				"slurmdbd": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       6819,
+					"targetPort": 6819,
+				},
+			},
+			"volumePermissions": map[string]interface{}{
+				"image": map[string]interface{}{
+					"registry":    "docker.io",
+					"repository":  "bitnami/os-shell",
+					"tag":         "12-debian-12-r30",
+					"pullPolicy":  "IfNotPresent",
+					"pullSecrets": []string{},
+				},
+				"volumePath":   "/etc/slurm/slurmdbd.conf",
+				"containerUID": 1109,
+				"containerGID": 1109,
+			},
+		},
+		"login": map[string]interface{}{
+			"name":         r.Spec.Values.SlurmLogin.Name,
+			"commonLabels": []string{},
+			"replicaCount": 1,
+			"image": map[string]interface{}{
+				"registry":    r.Spec.Values.SlurmLogin.Image.Registry,
+				"repository":  r.Spec.Values.SlurmLogin.Image.Repository,
+				"tag":         r.Spec.Values.SlurmLogin.Image.Tag,
+				"pullPolicy":  r.Spec.Values.SlurmLogin.Image.PullPolicy,
+				"pullSecrets": r.Spec.Values.SlurmLogin.Image.PullSecrets,
+			},
+			"diagnoticMode": map[string]interface{}{
+				"enabled": r.Spec.Values.SlurmLogin.DiagnosticMode.Enabled,
+				"command": r.Spec.Values.SlurmLogin.DiagnosticMode.Command,
+				"args":    r.Spec.Values.SlurmLogin.DiagnosticMode.Args,
+			},
+			"automountServiceAccountToken": false,
+			"podLabels":                    map[string]string{},
+			"affinity":                     map[string]string{},
+			"podAnnatations":               map[string]string{},
+			"podAntiAffinityPreset":        "soft",
+			"nodeAffinityPreset": map[string]interface{}{
+				"type":   "",
+				"key":    "",
+				"values": []string{},
+			},
+			"hostNetwork":               false,
+			"dnsPolicy":                 "",
+			"dnsConfig":                 map[string]string{},
+			"hostIPC":                   false,
+			"priorityClassName":         "",
+			"nodeSelector":              map[string]string{},
+			"tolerations":               []string{},
+			"schedulerName":             "",
+			"topologySpreadConstraints": []string{},
+			"podSecurityContext": map[string]interface{}{
+				"enabled":             false,
+				"fsGroup":             0,
+				"fsGroupChangePolicy": "Always",
+				"supplementalGroups":  []string{},
+			},
+			"terminationGracePeriodSeconds": "",
+			"hostAliases":                   []string{},
+			"extraEnvVars":                  []string{},
+			"extraEnvVarsCM":                "",
+			"extraEnvVarsSecret":            "",
+			"revisionHistoryLimit":          10,
+			"updateStrategy": map[string]interface{}{
+				"type":          "RollingUpdate",
+				"rollingUpdate": map[string]string{},
+			},
+			"lifecycleHooks": map[string]string{},
+			"resources": map[string]interface{}{
+				"requests": map[string]interface{}{
+					"cpu":               r.Spec.Values.SlurmLogin.Resources.Requests.CPU,
+					"memory":            r.Spec.Values.SlurmLogin.Resources.Requests.Memory,
+					"ephemeral-storage": r.Spec.Values.SlurmLogin.Resources.Requests.EphemeralStorage,
+				},
+			},
+			"extraVolumes":      r.Spec.Values.SlurmLogin.ExtraVolumes,
+			"extraVolumeMounts": r.Spec.Values.SlurmLogin.ExtraVolumeMounts,
+			"livenessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"startupProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"readinessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"service": map[string]interface{}{
+				"name": "login",
+				"ssh": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       22,
+					"targetPort": 22,
+				},
+			},
+		},
+		"serviceAccount": map[string]interface{}{
+			"automount": true,
+		},
+	}
+	return values
+}
+
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.0/pkg/reconcile
 func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// 获取自定义资源实例
+	// get CR SlurmDeployment instance
 	release := &slurmv1.SlurmDeployment{}
 	if err := r.Get(ctx, req.NamespacedName, release); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	log.Printf("Find SlurmDeployment %s", release.Name)
 
-	// 初始化 Helm 配置
+	// init Slurm Helm Chart settings
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
 	if err := actionConfig.Init(settings.RESTClientGetter(), release.Spec.Chart.Namespace, "secret", log.Printf); err != nil {
@@ -77,18 +550,13 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	// 构造 Chart 的 values
-	values := map[string]interface{}{
-		"service": map[string]interface{}{
-			"type": release.Spec.Values.Service.Type,
-		},
-		"replicaCount": release.Spec.Values.ReplicaCount,
-	}
+	// build values yaml content for Slurm Chart
+	values := buildChartValues(release)
 
-	// 检查 Release 是否存在
+	// Check release if exists
 	histClient := action.NewHistory(actionConfig)
 	if _, err := histClient.Run(release.Name); err == nil {
-		// 执行升级
+		// upgrade release
 		upgradeClient := action.NewUpgrade(actionConfig)
 		upgradeClient.Namespace = release.Spec.Chart.Namespace
 
@@ -96,7 +564,7 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return handleResult(err)
 	}
 
-	// 全新安装
+	// install a new release
 	installClient := action.NewInstall(actionConfig)
 	installClient.ReleaseName = release.Name
 	installClient.Namespace = release.Spec.Chart.Namespace
@@ -160,7 +628,7 @@ func getChart(r *slurmv1.SlurmDeployment) *chart.Chart {
 	return chrt
 }
 
-// downloadFile 下载文件到指定路径
+// download chart File
 func downloadFile(url, filePath string) error {
 	log.Printf("Downloading file from %s to %s", url, filePath)
 	resp, err := http.Get(url)
@@ -192,7 +660,7 @@ func downloadFile(url, filePath string) error {
 	return nil
 }
 
-// extractTarGz 解压 .tgz 文件
+// unzip helm chart.tgz file
 func extractTarGz(filePath, destPath string) error {
 	// 打开压缩文件
 	gzFile, err := os.Open(filePath)

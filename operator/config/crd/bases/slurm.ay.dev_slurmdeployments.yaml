@@ -59,19 +59,584 @@ spec:
                 type: object
               values:
                 properties:
-                  replicaCount:
-                    format: int32
-                    type: integer
-                  service:
+                  auth:
                     properties:
-                      type:
+                      ssh:
+                        properties:
+                          configmap:
+                            properties:
+                              name:
+                                type: string
+                              prefabPubKeys:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - name
+                            - prefabPubKeys
+                            type: object
+                          secret:
+                            properties:
+                              keys:
+                                properties:
+                                  authorizedKeys:
+                                    type: string
+                                  private:
+                                    type: string
+                                  public:
+                                    type: string
+                                required:
+                                - authorizedKeys
+                                - private
+                                - public
+                                type: object
+                              name:
+                                type: string
+                            required:
+                            - keys
+                            - name
+                            type: object
+                        required:
+                        - configmap
+                        - secret
+                        type: object
+                    required:
+                    - ssh
+                    type: object
+                  login:
+                    properties:
+                      commonLables:
+                        items:
+                          type: string
+                        type: array
+                      diagnosticMode:
+                        properties:
+                          args:
+                            items:
+                              type: string
+                            type: array
+                          command:
+                            items:
+                              type: string
+                            type: array
+                          enabled:
+                            type: boolean
+                        required:
+                        - args
+                        - command
+                        - enabled
+                        type: object
+                      extraVolumeMounts:
+                        items:
+                          properties:
+                            mountPath:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - mountPath
+                          - name
+                          type: object
+                        type: array
+                      extraVolumes:
+                        items:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        type: array
+                      image:
+                        properties:
+                          pullPolicy:
+                            type: string
+                          pullSecrets:
+                            items:
+                              type: string
+                            type: array
+                          registry:
+                            type: string
+                          repository:
+                            type: string
+                          tag:
+                            type: string
+                        required:
+                        - pullPolicy
+                        - pullSecrets
+                        - registry
+                        - repository
+                        - tag
+                        type: object
+                      name:
+                        type: string
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                type: string
+                              ephemeral-storage:
+                                type: string
+                              memory:
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                type: string
+                              ephemeral-storage:
+                                type: string
+                              memory:
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                        required:
+                        - limits
+                        - requests
+                        type: object
+                    required:
+                    - commonLables
+                    - diagnosticMode
+                    - extraVolumeMounts
+                    - extraVolumes
+                    - image
+                    - name
+                    - resources
+                    type: object
+                  mariadb:
+                    properties:
+                      auth:
+                        properties:
+                          database:
+                            type: string
+                          password:
+                            type: string
+                          username:
+                            type: string
+                        required:
+                        - database
+                        - password
+                        - username
+                        type: object
+                      enabled:
+                        type: boolean
+                      port:
+                        format: int32
+                        type: integer
+                      primary:
+                        properties:
+                          persistence:
+                            properties:
+                              enabled:
+                                type: boolean
+                              size:
+                                type: string
+                              storageClass:
+                                type: string
+                            required:
+                            - enabled
+                            - size
+                            - storageClass
+                            type: object
+                        required:
+                        - persistence
+                        type: object
+                    required:
+                    - auth
+                    - enabled
+                    - port
+                    - primary
+                    type: object
+                  munged:
+                    properties:
+                      commonLables:
+                        items:
+                          type: string
+                        type: array
+                      diagnosticMode:
+                        properties:
+                          args:
+                            items:
+                              type: string
+                            type: array
+                          command:
+                            items:
+                              type: string
+                            type: array
+                          enabled:
+                            type: boolean
+                        required:
+                        - args
+                        - command
+                        - enabled
+                        type: object
+                      extraVolumeMounts:
+                        items:
+                          properties:
+                            mountPath:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - mountPath
+                          - name
+                          type: object
+                        type: array
+                      extraVolumes:
+                        items:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        type: array
+                      image:
+                        properties:
+                          pullPolicy:
+                            type: string
+                          pullSecrets:
+                            items:
+                              type: string
+                            type: array
+                          registry:
+                            type: string
+                          repository:
+                            type: string
+                          tag:
+                            type: string
+                        required:
+                        - pullPolicy
+                        - pullSecrets
+                        - registry
+                        - repository
+                        - tag
+                        type: object
+                      name:
                         type: string
                     required:
-                    - type
+                    - commonLables
+                    - diagnosticMode
+                    - extraVolumeMounts
+                    - extraVolumes
+                    - image
+                    - name
                     type: object
-                required:
-                - replicaCount
-                - service
+                  persistence:
+                    properties:
+                      shared:
+                        properties:
+                          accessModes:
+                            items:
+                              type: string
+                            type: array
+                          enabled:
+                            type: boolean
+                          existingClaim:
+                            type: string
+                          name:
+                            type: string
+                          size:
+                            type: string
+                          storageClass:
+                            type: string
+                        required:
+                        - accessModes
+                        - enabled
+                        - existingClaim
+                        - name
+                        - size
+                        - storageClass
+                        type: object
+                    required:
+                    - shared
+                    type: object
+                  slurmctld:
+                    properties:
+                      checkDns:
+                        properties:
+                          image:
+                            properties:
+                              pullPolicy:
+                                type: string
+                              pullSecrets:
+                                items:
+                                  type: string
+                                type: array
+                              registry:
+                                type: string
+                              repository:
+                                type: string
+                              tag:
+                                type: string
+                            required:
+                            - pullPolicy
+                            - pullSecrets
+                            - registry
+                            - repository
+                            - tag
+                            type: object
+                        required:
+                        - image
+                        type: object
+                      commonLables:
+                        items:
+                          type: string
+                        type: array
+                      diagnosticMode:
+                        properties:
+                          args:
+                            items:
+                              type: string
+                            type: array
+                          command:
+                            items:
+                              type: string
+                            type: array
+                          enabled:
+                            type: boolean
+                        required:
+                        - args
+                        - command
+                        - enabled
+                        type: object
+                      extraVolumeMounts:
+                        items:
+                          properties:
+                            mountPath:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - mountPath
+                          - name
+                          type: object
+                        type: array
+                      extraVolumes:
+                        items:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        type: array
+                      image:
+                        properties:
+                          pullPolicy:
+                            type: string
+                          pullSecrets:
+                            items:
+                              type: string
+                            type: array
+                          registry:
+                            type: string
+                          repository:
+                            type: string
+                          tag:
+                            type: string
+                        required:
+                        - pullPolicy
+                        - pullSecrets
+                        - registry
+                        - repository
+                        - tag
+                        type: object
+                      name:
+                        type: string
+                      replicaCount:
+                        format: int32
+                        type: integer
+                    required:
+                    - checkDns
+                    - commonLables
+                    - diagnosticMode
+                    - extraVolumeMounts
+                    - extraVolumes
+                    - image
+                    - name
+                    - replicaCount
+                    type: object
+                  slurmd:
+                    properties:
+                      commonLables:
+                        items:
+                          type: string
+                        type: array
+                      diagnosticMode:
+                        properties:
+                          args:
+                            items:
+                              type: string
+                            type: array
+                          command:
+                            items:
+                              type: string
+                            type: array
+                          enabled:
+                            type: boolean
+                        required:
+                        - args
+                        - command
+                        - enabled
+                        type: object
+                      extraVolumeMounts:
+                        items:
+                          properties:
+                            mountPath:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - mountPath
+                          - name
+                          type: object
+                        type: array
+                      extraVolumes:
+                        items:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        type: array
+                      image:
+                        properties:
+                          pullPolicy:
+                            type: string
+                          pullSecrets:
+                            items:
+                              type: string
+                            type: array
+                          registry:
+                            type: string
+                          repository:
+                            type: string
+                          tag:
+                            type: string
+                        required:
+                        - pullPolicy
+                        - pullSecrets
+                        - registry
+                        - repository
+                        - tag
+                        type: object
+                      name:
+                        type: string
+                      replicaCount:
+                        format: int32
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                type: string
+                              ephemeral-storage:
+                                type: string
+                              memory:
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                type: string
+                              ephemeral-storage:
+                                type: string
+                              memory:
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                        required:
+                        - limits
+                        - requests
+                        type: object
+                    required:
+                    - commonLables
+                    - diagnosticMode
+                    - extraVolumeMounts
+                    - extraVolumes
+                    - image
+                    - name
+                    - replicaCount
+                    - resources
+                    type: object
+                  slurmdbd:
+                    properties:
+                      commonLables:
+                        items:
+                          type: string
+                        type: array
+                      diagnosticMode:
+                        properties:
+                          args:
+                            items:
+                              type: string
+                            type: array
+                          command:
+                            items:
+                              type: string
+                            type: array
+                          enabled:
+                            type: boolean
+                        required:
+                        - args
+                        - command
+                        - enabled
+                        type: object
+                      extraVolumeMounts:
+                        items:
+                          properties:
+                            mountPath:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                          - mountPath
+                          - name
+                          type: object
+                        type: array
+                      extraVolumes:
+                        items:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        type: array
+                      image:
+                        properties:
+                          pullPolicy:
+                            type: string
+                          pullSecrets:
+                            items:
+                              type: string
+                            type: array
+                          registry:
+                            type: string
+                          repository:
+                            type: string
+                          tag:
+                            type: string
+                        required:
+                        - pullPolicy
+                        - pullSecrets
+                        - registry
+                        - repository
+                        - tag
+                        type: object
+                      name:
+                        type: string
+                    required:
+                    - commonLables
+                    - diagnosticMode
+                    - extraVolumeMounts
+                    - extraVolumes
+                    - image
+                    - name
+                    type: object
                 type: object
             required:
             - chart

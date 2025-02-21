@@ -1,5 +1,6 @@
 mariadb:
   enabled: true
+  port: 3306
   auth:
     username: "slurm"
     password: "password-for-slurm"
@@ -181,7 +182,11 @@ slurmd:
     type: RollingUpdate
     rollingUpdate: {}
   lifecycleHooks: {}
-  resources: {}
+  resources: 
+    requests:
+      cpu: 1
+      ephemeral-storage: 10Gi
+      memory: 1Gi
   extraVolumes: []
   extraVolumeMounts: []
   livenessProbe:
@@ -343,6 +348,8 @@ login:
     fsGroup: 0
   terminationGracePeriodSeconds: ""
   hostAliases: []
+  command: []
+  args: []
   diagnosticMode:
     enabled: false
     command: ["tail", "-f", "/etc/hosts"]
@@ -436,7 +443,7 @@ configuration:
     SlurmctldLogFile=/var/log/slurm/slurmctld.log
     SlurmdDebug=info
     SlurmdLogFile=/var/log/slurm/slurmd.log
-    NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs=6 CoresPerSocket=6 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
+    NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs={{ .Values.slurmd.resources.requests.cpu }} CoresPerSocket=6 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
     PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP
   slurmdbdConf: |-
     AuthType=auth/munge
@@ -449,7 +456,7 @@ configuration:
     DbdPort={{ .Values.slurmdbd.service.slurmdbd.port }}
     StorageType=accounting_storage/mysql
     StorageHost={{ include "common.names.fullname" . }}-mariadb
-    StoragePort=3306
+    StoragePort={{ .Values.mariadb.port }}
     StoragePass={{ .Values.mariadb.auth.password }}
     StorageUser={{ .Values.mariadb.auth.username }}
     StorageLoc={{ .Values.mariadb.auth.database }}

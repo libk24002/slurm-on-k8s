@@ -7,11 +7,76 @@ metadata:
   name: slurmdeployment
 spec:
   chart:
-    name: nginx
-    repository: https://charts.bitnami.com/bitnami
-    version: 13.2.20
-    namespace: default
+    name: chart
+    repository: https://aaronyang0628.github.io/slurm-on-k8s
+    version: 1.0.2
+    namespace: slurm
   values:
-    service:
-      type: ClusterIP
-    replicaCount: 3
+    mariadb:
+      enabled: true
+      port: 3306
+      primary:
+        persistence:
+          enabled: false
+          storageClass: ""
+          size: 8Gi
+    auth:
+      ssh:
+        configmap:
+          name: slurm-ssh-auth-keys
+          prefabPubKeys: ["ssh-rsa sample_public_key"]
+    persistence:
+      shared:
+        enabled: true
+        accessModes:
+          - ReadWriteMany
+        name: slurm-shared-storage
+        storageClass: ""
+        size: 8Gi
+    imgae:
+      pullPolicy: IfNotPresent
+      pullSecrets: []
+      registry: "docker-registry.lab.zverse.space"
+    munged:
+      image:
+        repository: data-and-computing/slurm-munged
+        tag: :intelmpi-250208-r0
+    slurmdbd:
+      image:
+        repository: data-and-computing/slurm-slurmdbd
+        tag: :intelmpi-250208-r0
+    slurmctld:
+      image:
+        repository: data-and-computing/slurm-slurmctld
+        tag: :intelmpi-250208-r0
+    login:
+      image:
+        repository: data-and-computing/slurm-login
+        tag: :intelmpi-250208-r0
+      resources: 
+        limits:
+          cpu: 6
+          ephemeral-storage: 50Gi
+          memory: 8Gi
+        requests:
+          cpu: 1
+          ephemeral-storage: 8Gi
+          memory: 1Gi
+      command: []
+      args: []
+      extraVolumes: []
+      extraVolumeMounts: []
+    slurmd:
+      replicas: 1
+      image:
+        repository: data-and-computing/slurm-slurmd
+        tag: :intelmpi-250208-r0
+      resources: 
+        requests:
+          cpu: 2
+          ephemeral-storage: 10Gi
+          memory: 4Gi
+      extraVolumes: []
+      extraVolumeMounts: []
+
+  

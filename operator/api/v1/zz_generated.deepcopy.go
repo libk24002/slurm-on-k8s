@@ -270,8 +270,10 @@ func (in *MungedSpec) DeepCopyInto(out *MungedSpec) {
 	*out = *in
 	if in.CommonLabels != nil {
 		in, out := &in.CommonLabels, &out.CommonLabels
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	in.Image.DeepCopyInto(&out.Image)
 	in.DiagnosticMode.DeepCopyInto(&out.DiagnosticMode)
@@ -558,8 +560,10 @@ func (in *SlurmLogindSpec) DeepCopyInto(out *SlurmLogindSpec) {
 	*out = *in
 	if in.CommonLabels != nil {
 		in, out := &in.CommonLabels, &out.CommonLabels
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	in.Image.DeepCopyInto(&out.Image)
 	in.Resources.DeepCopyInto(&out.Resources)
@@ -615,8 +619,10 @@ func (in *SlurmctldSpec) DeepCopyInto(out *SlurmctldSpec) {
 	*out = *in
 	if in.CommonLabels != nil {
 		in, out := &in.CommonLabels, &out.CommonLabels
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	in.Image.DeepCopyInto(&out.Image)
 	in.CheckDNS.DeepCopyInto(&out.CheckDNS)
@@ -697,8 +703,10 @@ func (in *SlurmdbdSpec) DeepCopyInto(out *SlurmdbdSpec) {
 	*out = *in
 	if in.CommonLabels != nil {
 		in, out := &in.CommonLabels, &out.CommonLabels
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	in.Image.DeepCopyInto(&out.Image)
 	in.DiagnosticMode.DeepCopyInto(&out.DiagnosticMode)
@@ -747,13 +755,17 @@ func (in *ValuesSpec) DeepCopyInto(out *ValuesSpec) {
 	out.SlurmConfig = in.SlurmConfig
 	if in.CommonAnnotations != nil {
 		in, out := &in.CommonAnnotations, &out.CommonAnnotations
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	if in.CommonLabels != nil {
 		in, out := &in.CommonLabels, &out.CommonLabels
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 }
 

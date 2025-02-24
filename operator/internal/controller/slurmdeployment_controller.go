@@ -30,9 +30,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/cli"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -67,13 +71,19 @@ func GetValueWithDefault[T any](ptr *T, defaultValue T) T {
 
 func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 	if r.Spec.Values.CommonAnnotations == nil {
-		r.Spec.Values.CommonAnnotations = []string{}
+		r.Spec.Values.CommonAnnotations = map[string]string{}
 	}
 	if r.Spec.Values.CommonLabels == nil {
-		r.Spec.Values.CommonLabels = []string{}
+		r.Spec.Values.CommonLabels = map[string]string{}
 	}
-	
-	log.Printf("Build chart values for r.Spec.Values.Mariadb.Auth.Username -> %s", GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.Username, "slurm"))
+	if r.Spec.Values.Mariadb.Auth == nil {
+		r.Spec.Values.Mariadb.Auth = &slurmv1.MariaDBAuthSpec{
+			Username:     "slurm",
+			Password:     "password-for-slurm",
+			DatabaseName: "slurm_acct_db",
+		}
+	}
+
 	values := map[string]interface{}{
 		"nameOverride":      r.Spec.Values.NameOverride,
 		"fullnameOverride":  r.Spec.Values.FullnameOverride,
@@ -83,9 +93,9 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"enabled": r.Spec.Values.Mariadb.Enabled,
 			"port":    r.Spec.Values.Mariadb.Port,
 			"auth": map[string]interface{}{
-				"username": GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.Username, "slurm"),
-				"password": GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.Password, "password-for-slurm"),
-				"database": GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.DatabaseName, "slurm_acct_db"),
+				"username": r.Spec.Values.Mariadb.Auth.Username,
+				"password": r.Spec.Values.Mariadb.Auth.Password,
+				"database": r.Spec.Values.Mariadb.Auth.DatabaseName,
 			},
 			"primary": map[string]interface{}{
 				"persistence": map[string]interface{}{
@@ -98,11 +108,11 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		"auth": map[string]interface{}{
 			"ssh": map[string]interface{}{
 				"secret": map[string]interface{}{
-					"name": r.Spec.Values.Auth.SSH.Secret.Name,
+					"name": "slurm-ssh-keys",
 					"keys": map[string]interface{}{
-						"public":         r.Spec.Values.Auth.SSH.Secret.Keys.Public,
-						"private":        r.Spec.Values.Auth.SSH.Secret.Keys.Private,
-						"authorizedKeys": r.Spec.Values.Auth.SSH.Secret.Keys.AuthorizedKeys,
+						"public":         "id_rsa.pub",
+						"private":        "id_rsa",
+						"authorizedKeys": "authorized_keys",
 					},
 				},
 				"configmap": map[string]interface{}{
@@ -123,8 +133,9 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		},
 		"resourcesPreset": "nano",
 		"munged": map[string]interface{}{
+			"name":         "munged",
 			"enabled":      true,
-			"commonLabels": []string{},
+			"commonLabels": map[string]string{},
 			"image": map[string]interface{}{
 				"registry":    r.Spec.Values.Munged.Image.Registry,
 				"repository":  r.Spec.Values.Munged.Image.Repository,
@@ -141,8 +152,8 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"extraVolumeMounts": r.Spec.Values.Munged.ExtraVolumeMounts,
 		},
 		"slurmctld": map[string]interface{}{
-			"name":         r.Spec.Values.Slurmctld.Name,
-			"commonLabels": []string{},
+			"name":         "slurmctld",
+			"commonLabels": map[string]string{},
 			"replicaCount": r.Spec.Values.Slurmctld.ReplicaCount,
 			"image": map[string]interface{}{
 				"registry":    r.Spec.Values.Slurmctld.Image.Registry,
@@ -243,8 +254,8 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 		},
 		"slurmd": map[string]interface{}{
-			"name":         r.Spec.Values.Slurmd.Name,
-			"commonLabels": []string{},
+			"name":         "slurmd",
+			"commonLabels": map[string]string{},
 			"replicaCount": r.Spec.Values.Slurmd.ReplicaCount,
 			"image": map[string]interface{}{
 				"registry":    r.Spec.Values.Slurmd.Image.Registry,
@@ -295,7 +306,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 			"lifecycleHooks": map[string]string{},
 			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
+				"requests": map[string]string{
 					"cpu":               r.Spec.Values.Slurmd.Resources.Requests.CPU,
 					"memory":            r.Spec.Values.Slurmd.Resources.Requests.Memory,
 					"ephemeral-storage": r.Spec.Values.Slurmd.Resources.Requests.EphemeralStorage,
@@ -342,8 +353,8 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 		},
 		"slurmdbd": map[string]interface{}{
-			"name":         r.Spec.Values.Slurmdbd.Name,
-			"commonLabels": []string{},
+			"name":         "slurmdbd",
+			"commonLabels": map[string]string{},
 			"replicaCount": 1,
 			"image": map[string]interface{}{
 				"registry":    r.Spec.Values.Slurmdbd.Image.Registry,
@@ -446,8 +457,8 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 		},
 		"login": map[string]interface{}{
-			"name":         r.Spec.Values.SlurmLogin.Name,
-			"commonLabels": []string{},
+			"name":         "login",
+			"commonLabels": map[string]string{},
 			"replicaCount": 1,
 			"image": map[string]interface{}{
 				"registry":    r.Spec.Values.SlurmLogin.Image.Registry,
@@ -498,7 +509,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 			"lifecycleHooks": map[string]string{},
 			"resources": map[string]interface{}{
-				"requests": map[string]interface{}{
+				"requests": map[string]string{
 					"cpu":               r.Spec.Values.SlurmLogin.Resources.Requests.CPU,
 					"memory":            r.Spec.Values.SlurmLogin.Resources.Requests.Memory,
 					"ephemeral-storage": r.Spec.Values.SlurmLogin.Resources.Requests.EphemeralStorage,
@@ -620,6 +631,29 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 	log.Printf("Find SlurmDeployment %s", release.Name)
 
+	// Check if namespace exists, if not, create it
+	namespace := release.Spec.Chart.Namespace
+	if namespace != "" {
+		ns := &corev1.Namespace{}
+		err := r.Get(ctx, client.ObjectKey{Name: namespace}, ns)
+		if errors.IsNotFound(err) {
+			// Namespace does not exist, create it
+			ns = &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: namespace,
+				},
+			}
+			if err := r.Create(ctx, ns); err != nil {
+				log.Printf("Failed to create namespace %s: %v", namespace, err)
+				return ctrl.Result{}, err
+			}
+			log.Printf("Namespace %s created successfully", namespace)
+		} else if err != nil {
+			log.Printf("Failed to get namespace %s: %v", namespace, err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	// init Slurm Helm Chart settings
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
@@ -630,7 +664,6 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	// build values yaml content for Slurm Chart
 	values := buildChartValues(release)
-	log.Printf("Values Yaml: %v", values)
 
 	// Check release if exists
 	histClient := action.NewHistory(actionConfig)

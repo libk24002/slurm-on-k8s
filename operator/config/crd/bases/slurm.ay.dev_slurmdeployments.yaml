@@ -106,13 +106,13 @@ spec:
                         type: object
                     type: object
                   commonAnnotations:
-                    items:
+                    additionalProperties:
                       type: string
-                    type: array
+                    type: object
                   commonLabels:
-                    items:
+                    additionalProperties:
                       type: string
-                    type: array
+                    type: object
                   configuration:
                     properties:
                       cgroup:
@@ -141,9 +141,9 @@ spec:
                   login:
                     properties:
                       commonLabels:
-                        items:
+                        additionalProperties:
                           type: string
-                        type: array
+                        type: object
                       diagnosticMode:
                         properties:
                           args:
@@ -301,9 +301,9 @@ spec:
                   munged:
                     properties:
                       commonLabels:
-                        items:
+                        additionalProperties:
                           type: string
-                        type: array
+                        type: object
                       diagnosticMode:
                         properties:
                           args:
@@ -479,9 +479,9 @@ spec:
                         - image
                         type: object
                       commonLabels:
-                        items:
+                        additionalProperties:
                           type: string
-                        type: array
+                        type: object
                       diagnosticMode:
                         properties:
                           args:
@@ -680,9 +680,9 @@ spec:
                   slurmdbd:
                     properties:
                       commonLabels:
-                        items:
+                        additionalProperties:
                           type: string
-                        type: array
+                        type: object
                       diagnosticMode:
                         properties:
                           args:
@@ -763,6 +763,7 @@ spec:
                 type: object
             required:
             - chart
+            - values
             type: object
           status:
             description: SlurmDeploymentStatus defines the observed state of SlurmDeployment.

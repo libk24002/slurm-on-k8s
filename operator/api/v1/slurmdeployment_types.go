@@ -17,6 +17,8 @@ limitations under the License.
 package v1
 
 import (
+	"encoding/json"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -41,11 +43,11 @@ type MariaDBSpec struct {
 
 type MariaDBAuthSpec struct {
 	// +kubebuilder:default="slurm"
-	Username *string `json:"username,omitempty"`
+	Username string `json:"username,omitempty"`
 	// +kubebuilder:default="password-for-slurm"
-	Password *string `json:"password,omitempty"`
+	Password string `json:"password,omitempty"`
 	// +kubebuilder:default="slurm_acct_db"
-	DatabaseName *string `json:"database,omitempty"`
+	DatabaseName string `json:"database,omitempty"`
 }
 
 type MariaDBPrimarySpec struct {
@@ -138,7 +140,7 @@ type ExtraVolumeMountsSpec struct {
 type MungedSpec struct {
 	// +kubebuilder:default="munged"
 	Name              string                  `json:"name"`
-	CommonLabels      []string                `json:"commonLabels,omitempty"`
+	CommonLabels      map[string]string       `json:"commonLabels,omitempty"`
 	Image             ImageSpec               `json:"image"`
 	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
 	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
@@ -148,7 +150,7 @@ type MungedSpec struct {
 type SlurmctldSpec struct {
 	// +kubebuilder:default="slurmctld"
 	Name         string            `json:"name"`
-	CommonLabels []string          `json:"commonLabels,omitempty"`
+	CommonLabels map[string]string `json:"commonLabels,omitempty"`
 	Image        ImageSpec         `json:"image"`
 	CheckDNS     SlurmctldCheckDNS `json:"checkDns"`
 	// +kubebuilder:default=1
@@ -201,7 +203,7 @@ type ResourceLimitSpec struct {
 type SlurmdbdSpec struct {
 	// +kubebuilder:default="slurmdbd"
 	Name              string                  `json:"name"`
-	CommonLabels      []string                `json:"commonLabels,omitempty"`
+	CommonLabels      map[string]string       `json:"commonLabels,omitempty"`
 	Image             ImageSpec               `json:"image"`
 	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
 	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
@@ -211,7 +213,7 @@ type SlurmdbdSpec struct {
 type SlurmLogindSpec struct {
 	// +kubebuilder:default="login"
 	Name              string                  `json:"name"`
-	CommonLabels      []string                `json:"commonLabels,omitempty"`
+	CommonLabels      map[string]string       `json:"commonLabels,omitempty"`
 	Image             ImageSpec               `json:"image"`
 	Resources         ResourceSpec            `json:"resources"`
 	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
@@ -265,9 +267,9 @@ type ValuesSpec struct {
 	// +kubebuilder:default=""
 	NameOverride string `json:"nameOverride,omitempty"`
 	// +kubebuilder:default=""
-	FullnameOverride  string   `json:"fullnameOverride,omitempty"`
-	CommonAnnotations []string `json:"commonAnnotations,omitempty"`
-	CommonLabels      []string `json:"commonLabels,omitempty"`
+	FullnameOverride  string            `json:"fullnameOverride,omitempty"`
+	CommonAnnotations map[string]string `json:"commonAnnotations,omitempty"`
+	CommonLabels      map[string]string `json:"commonLabels,omitempty"`
 }
 
 // SlurmDeploymentSpec defines the desired state of SlurmDeployment.
@@ -275,7 +277,7 @@ type SlurmDeploymentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Chart  ChartSpec  `json:"chart"`
-	Values ValuesSpec `json:"values,omitempty"`
+	Values ValuesSpec `json:"values"`
 }
 
 // SlurmDeploymentStatus defines the observed state of SlurmDeployment.
@@ -297,32 +299,39 @@ type SlurmDeployment struct {
 }
 
 func (v *ValuesSpec) UnmarshalJSON(data []byte) error {
-	type Alias ValuesSpec
-	// aux := &struct {
-	// 	Service      ServiceSpec `json:"service"`
-	// 	ReplicaCount interface{} `json:"replicaCount"`
-	// }{}
-	// if err := json.Unmarshal(data, &aux); err != nil {
-	// 	return err
-	// }
-	// v.Service = aux.Service
-	// switch val := aux.ReplicaCount.(type) {
-	// case int32:
-	// 	v.ReplicaCount = val
-	// case int:
-	// 	v.ReplicaCount = int32(val)
-	// case string:
-	// 	num, err := strconv.ParseInt(val, 10, 32)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	v.ReplicaCount = int32(num)
-	// case float64:
-	// 	// 处理 float64 类型
-	// 	v.ReplicaCount = int32(val)
-	// default:
-	// 	return fmt.Errorf("unexpected type for replicaCount: %T", val)
-	// }
+	aux := &struct {
+		Mariadb           MariaDBSpec        `json:"mariadb"`
+		Auth              AuthSpec           `json:"auth,omitempty"`
+		Persistence       PersistenceSpec    `json:"persistence,omitempty"`
+		Munged            MungedSpec         `json:"munged"`
+		Slurmctld         SlurmctldSpec      `json:"slurmctld"`
+		Slurmd            SlurmdSpec         `json:"slurmd"`
+		Slurmdbd          SlurmdbdSpec       `json:"slurmdbd"`
+		SlurmLogin        SlurmLogindSpec    `json:"login"`
+		ServiceAccount    ServiceAccountSpec `json:"serviceAccount,omitempty"`
+		SlurmConfig       SlurmConfigSpec    `json:"configuration,omitempty"`
+		NameOverride      string             `json:"nameOverride,omitempty"`
+		FullnameOverride  string             `json:"fullnameOverride,omitempty"`
+		CommonAnnotations map[string]string  `json:"commonAnnotations,omitempty"`
+		CommonLabels      map[string]string  `json:"commonLabels,omitempty"`
+	}{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	v.Mariadb = aux.Mariadb
+	v.Mariadb = aux.Mariadb
+	v.Mariadb = aux.Mariadb
+	v.Munged = aux.Munged
+	v.Slurmctld = aux.Slurmctld
+	v.Slurmd = aux.Slurmd
+	v.Slurmdbd = aux.Slurmdbd
+	v.SlurmLogin = aux.SlurmLogin
+	v.ServiceAccount = aux.ServiceAccount
+	v.SlurmConfig = aux.SlurmConfig
+	v.NameOverride = aux.NameOverride
+	v.FullnameOverride = aux.FullnameOverride
+	v.CommonAnnotations = aux.CommonAnnotations
+	v.CommonLabels = aux.CommonLabels
 	return nil
 }
 

@@ -3,6 +3,10 @@ kind: Job
 metadata:
   name: {{ .Release.Name }}-ssh-keygen
   namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
   ttlSecondsAfterFinished: 1800
   template:

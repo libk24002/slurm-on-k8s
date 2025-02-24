@@ -66,6 +66,7 @@ spec:
                           configmap:
                             properties:
                               name:
+                                default: slurm-ssh-auth-keys
                                 type: string
                               prefabPubKeys:
                                 items:
@@ -80,10 +81,13 @@ spec:
                               keys:
                                 properties:
                                   authorizedKeys:
+                                    default: authorized_keys
                                     type: string
                                   private:
+                                    default: id_rsa
                                     type: string
                                   public:
+                                    default: id_rsa.pub
                                     type: string
                                 required:
                                 - authorizedKeys
@@ -91,6 +95,7 @@ spec:
                                 - public
                                 type: object
                               name:
+                                default: slurm-ssh-keys
                                 type: string
                             required:
                             - keys
@@ -98,14 +103,44 @@ spec:
                             type: object
                         required:
                         - configmap
-                        - secret
                         type: object
-                    required:
-                    - ssh
                     type: object
+                  commonAnnotations:
+                    items:
+                      type: string
+                    type: array
+                  commonLabels:
+                    items:
+                      type: string
+                    type: array
+                  configuration:
+                    properties:
+                      cgroup:
+                        properties:
+                          name:
+                            default: cgroup-conf
+                            type: string
+                          value:
+                            type: string
+                        required:
+                        - name
+                        - value
+                        type: object
+                      slurmConf:
+                        type: string
+                      slurmdbdConf:
+                        type: string
+                    required:
+                    - cgroup
+                    - slurmConf
+                    - slurmdbdConf
+                    type: object
+                  fullnameOverride:
+                    default: ""
+                    type: string
                   login:
                     properties:
-                      commonLables:
+                      commonLabels:
                         items:
                           type: string
                         type: array
@@ -120,6 +155,7 @@ spec:
                               type: string
                             type: array
                           enabled:
+                            default: false
                             type: boolean
                         required:
                         - args
@@ -130,8 +166,10 @@ spec:
                         items:
                           properties:
                             mountPath:
+                              default: ""
                               type: string
                             name:
+                              default: ""
                               type: string
                           required:
                           - mountPath
@@ -147,16 +185,20 @@ spec:
                       image:
                         properties:
                           pullPolicy:
+                            default: IfNotPresent
                             type: string
                           pullSecrets:
                             items:
                               type: string
                             type: array
                           registry:
+                            default: localhost
                             type: string
                           repository:
+                            default: data-and-computing
                             type: string
                           tag:
+                            default: latest
                             type: string
                         required:
                         - pullPolicy
@@ -166,16 +208,20 @@ spec:
                         - tag
                         type: object
                       name:
+                        default: login
                         type: string
                       resources:
                         properties:
                           limits:
                             properties:
                               cpu:
+                                default: 3000m
                                 type: string
                               ephemeral-storage:
+                                default: 8Gi
                                 type: string
                               memory:
+                                default: 2Gi
                                 type: string
                             required:
                             - cpu
@@ -185,10 +231,13 @@ spec:
                           requests:
                             properties:
                               cpu:
+                                default: 500m
                                 type: string
                               ephemeral-storage:
+                                default: 2Gi
                                 type: string
                               memory:
+                                default: 1Gi
                                 type: string
                             required:
                             - cpu
@@ -196,14 +245,9 @@ spec:
                             - memory
                             type: object
                         required:
-                        - limits
                         - requests
                         type: object
                     required:
-                    - commonLables
-                    - diagnosticMode
-                    - extraVolumeMounts
-                    - extraVolumes
                     - image
                     - name
                     - resources
@@ -213,19 +257,20 @@ spec:
                       auth:
                         properties:
                           database:
+                            default: slurm_acct_db
                             type: string
                           password:
+                            default: password-for-slurm
                             type: string
                           username:
+                            default: slurm
                             type: string
-                        required:
-                        - database
-                        - password
-                        - username
                         type: object
                       enabled:
+                        default: true
                         type: boolean
                       port:
+                        default: 3306
                         format: int32
                         type: integer
                       primary:
@@ -233,10 +278,13 @@ spec:
                           persistence:
                             properties:
                               enabled:
+                                default: false
                                 type: boolean
                               size:
+                                default: 2Gi
                                 type: string
                               storageClass:
+                                default: ""
                                 type: string
                             required:
                             - enabled
@@ -247,14 +295,12 @@ spec:
                         - persistence
                         type: object
                     required:
-                    - auth
                     - enabled
                     - port
-                    - primary
                     type: object
                   munged:
                     properties:
-                      commonLables:
+                      commonLabels:
                         items:
                           type: string
                         type: array
@@ -269,6 +315,7 @@ spec:
                               type: string
                             type: array
                           enabled:
+                            default: false
                             type: boolean
                         required:
                         - args
@@ -279,8 +326,10 @@ spec:
                         items:
                           properties:
                             mountPath:
+                              default: ""
                               type: string
                             name:
+                              default: ""
                               type: string
                           required:
                           - mountPath
@@ -296,16 +345,20 @@ spec:
                       image:
                         properties:
                           pullPolicy:
+                            default: IfNotPresent
                             type: string
                           pullSecrets:
                             items:
                               type: string
                             type: array
                           registry:
+                            default: localhost
                             type: string
                           repository:
+                            default: data-and-computing
                             type: string
                           tag:
+                            default: latest
                             type: string
                         required:
                         - pullPolicy
@@ -315,15 +368,15 @@ spec:
                         - tag
                         type: object
                       name:
+                        default: munged
                         type: string
                     required:
-                    - commonLables
-                    - diagnosticMode
-                    - extraVolumeMounts
-                    - extraVolumes
                     - image
                     - name
                     type: object
+                  nameOverride:
+                    default: ""
+                    type: string
                   persistence:
                     properties:
                       shared:
@@ -333,14 +386,19 @@ spec:
                               type: string
                             type: array
                           enabled:
+                            default: true
                             type: boolean
                           existingClaim:
+                            default: ""
                             type: string
                           name:
+                            default: slurm-shared-storage
                             type: string
                           size:
+                            default: 8Gi
                             type: string
                           storageClass:
+                            default: ""
                             type: string
                         required:
                         - accessModes
@@ -353,6 +411,41 @@ spec:
                     required:
                     - shared
                     type: object
+                  serviceAccount:
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      automount:
+                        default: true
+                        type: boolean
+                      name:
+                        default: slurm
+                        type: string
+                      role:
+                        properties:
+                          name:
+                            default: slurm
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      roleBinding:
+                        properties:
+                          name:
+                            default: slurm
+                            type: string
+                        required:
+                        - name
+                        type: object
+                    required:
+                    - annotations
+                    - automount
+                    - name
+                    - role
+                    - roleBinding
+                    type: object
                   slurmctld:
                     properties:
                       checkDns:
@@ -360,16 +453,20 @@ spec:
                           image:
                             properties:
                               pullPolicy:
+                                default: IfNotPresent
                                 type: string
                               pullSecrets:
                                 items:
                                   type: string
                                 type: array
                               registry:
+                                default: localhost
                                 type: string
                               repository:
+                                default: data-and-computing
                                 type: string
                               tag:
+                                default: latest
                                 type: string
                             required:
                             - pullPolicy
@@ -381,7 +478,7 @@ spec:
                         required:
                         - image
                         type: object
-                      commonLables:
+                      commonLabels:
                         items:
                           type: string
                         type: array
@@ -396,6 +493,7 @@ spec:
                               type: string
                             type: array
                           enabled:
+                            default: false
                             type: boolean
                         required:
                         - args
@@ -406,8 +504,10 @@ spec:
                         items:
                           properties:
                             mountPath:
+                              default: ""
                               type: string
                             name:
+                              default: ""
                               type: string
                           required:
                           - mountPath
@@ -423,16 +523,20 @@ spec:
                       image:
                         properties:
                           pullPolicy:
+                            default: IfNotPresent
                             type: string
                           pullSecrets:
                             items:
                               type: string
                             type: array
                           registry:
+                            default: localhost
                             type: string
                           repository:
+                            default: data-and-computing
                             type: string
                           tag:
+                            default: latest
                             type: string
                         required:
                         - pullPolicy
@@ -442,23 +546,21 @@ spec:
                         - tag
                         type: object
                       name:
+                        default: slurmctld
                         type: string
                       replicaCount:
+                        default: 1
                         format: int32
                         type: integer
                     required:
                     - checkDns
-                    - commonLables
-                    - diagnosticMode
-                    - extraVolumeMounts
-                    - extraVolumes
                     - image
                     - name
                     - replicaCount
                     type: object
                   slurmd:
                     properties:
-                      commonLables:
+                      commonLabels:
                         items:
                           type: string
                         type: array
@@ -473,6 +575,7 @@ spec:
                               type: string
                             type: array
                           enabled:
+                            default: false
                             type: boolean
                         required:
                         - args
@@ -483,8 +586,10 @@ spec:
                         items:
                           properties:
                             mountPath:
+                              default: ""
                               type: string
                             name:
+                              default: ""
                               type: string
                           required:
                           - mountPath
@@ -500,16 +605,20 @@ spec:
                       image:
                         properties:
                           pullPolicy:
+                            default: IfNotPresent
                             type: string
                           pullSecrets:
                             items:
                               type: string
                             type: array
                           registry:
+                            default: localhost
                             type: string
                           repository:
+                            default: data-and-computing
                             type: string
                           tag:
+                            default: latest
                             type: string
                         required:
                         - pullPolicy
@@ -519,8 +628,10 @@ spec:
                         - tag
                         type: object
                       name:
+                        default: slurmd
                         type: string
                       replicaCount:
+                        default: 2
                         format: int32
                         type: integer
                       resources:
@@ -528,10 +639,13 @@ spec:
                           limits:
                             properties:
                               cpu:
+                                default: 3000m
                                 type: string
                               ephemeral-storage:
+                                default: 8Gi
                                 type: string
                               memory:
+                                default: 2Gi
                                 type: string
                             required:
                             - cpu
@@ -541,10 +655,13 @@ spec:
                           requests:
                             properties:
                               cpu:
+                                default: 500m
                                 type: string
                               ephemeral-storage:
+                                default: 2Gi
                                 type: string
                               memory:
+                                default: 1Gi
                                 type: string
                             required:
                             - cpu
@@ -552,14 +669,9 @@ spec:
                             - memory
                             type: object
                         required:
-                        - limits
                         - requests
                         type: object
                     required:
-                    - commonLables
-                    - diagnosticMode
-                    - extraVolumeMounts
-                    - extraVolumes
                     - image
                     - name
                     - replicaCount
@@ -567,7 +679,7 @@ spec:
                     type: object
                   slurmdbd:
                     properties:
-                      commonLables:
+                      commonLabels:
                         items:
                           type: string
                         type: array
@@ -582,6 +694,7 @@ spec:
                               type: string
                             type: array
                           enabled:
+                            default: false
                             type: boolean
                         required:
                         - args
@@ -592,8 +705,10 @@ spec:
                         items:
                           properties:
                             mountPath:
+                              default: ""
                               type: string
                             name:
+                              default: ""
                               type: string
                           required:
                           - mountPath
@@ -609,16 +724,20 @@ spec:
                       image:
                         properties:
                           pullPolicy:
+                            default: IfNotPresent
                             type: string
                           pullSecrets:
                             items:
                               type: string
                             type: array
                           registry:
+                            default: localhost
                             type: string
                           repository:
+                            default: data-and-computing
                             type: string
                           tag:
+                            default: latest
                             type: string
                         required:
                         - pullPolicy
@@ -628,15 +747,19 @@ spec:
                         - tag
                         type: object
                       name:
+                        default: slurmdbd
                         type: string
                     required:
-                    - commonLables
-                    - diagnosticMode
-                    - extraVolumeMounts
-                    - extraVolumes
                     - image
                     - name
                     type: object
+                required:
+                - login
+                - mariadb
+                - munged
+                - slurmctld
+                - slurmd
+                - slurmdbd
                 type: object
             required:
             - chart

@@ -40,13 +40,8 @@ spec:
         tag: :intelmpi-250208-r0
         pullPolicy: IfNotPresent
         pullSecrets: []
-      checkDns:
-        image:
-          registry: docker.io
-          repository: library/busybox
-          tag: 1.37.0-glibc
-          pullPolicy: IfNotPresent
-          pullSecrets: []
+      extraVolumes: []
+      extraVolumeMounts: []
     slurmdbd:
       image:
         registry: "docker-registry.lab.zverse.space"
@@ -54,6 +49,8 @@ spec:
         tag: :intelmpi-250208-r0
         pullPolicy: IfNotPresent
         pullSecrets: []
+      extraVolumes: []
+      extraVolumeMounts: []
     slurmctld:
       image:
         registry: "docker-registry.lab.zverse.space"
@@ -61,6 +58,15 @@ spec:
         tag: :intelmpi-250208-r0
         pullPolicy: IfNotPresent
         pullSecrets: []
+      extraVolumes: []
+      extraVolumeMounts: []
+      checkDns:
+        image:
+          registry: docker.io
+          repository: library/busybox
+          tag: 1.37.0-glibc
+          pullPolicy: IfNotPresent
+          pullSecrets: []
     login:
       image:
         registry: "docker-registry.lab.zverse.space"
@@ -70,17 +76,17 @@ spec:
         pullSecrets: []
       resources: 
         limits:
-          cpu: 6
+          cpu: 3000m
           ephemeral-storage: 50Gi
           memory: 8Gi
         requests:
-          cpu: 1
+          cpu: 1000m
           ephemeral-storage: 8Gi
           memory: 1Gi
       extraVolumes: []
       extraVolumeMounts: []
     slurmd:
-      replicas: 1
+      replicaCount: 1
       image:
         registry: "docker-registry.lab.zverse.space"
         repository: data-and-computing/slurm-slurmd
@@ -89,7 +95,7 @@ spec:
         pullSecrets: []
       resources: 
         requests:
-          cpu: 2
+          cpu: 1000m
           ephemeral-storage: 10Gi
           memory: 4Gi
       extraVolumes: []

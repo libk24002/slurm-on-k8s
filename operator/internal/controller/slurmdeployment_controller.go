@@ -58,20 +58,34 @@ type SlurmDeploymentReconciler struct {
 // the SlurmDeployment object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
+func GetValueWithDefault[T any](ptr *T, defaultValue T) T {
+	if ptr != nil {
+		return *ptr
+	}
+	return defaultValue
+}
 
 func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
+	if r.Spec.Values.CommonAnnotations == nil {
+		r.Spec.Values.CommonAnnotations = []string{}
+	}
+	if r.Spec.Values.CommonLabels == nil {
+		r.Spec.Values.CommonLabels = []string{}
+	}
+	
+	log.Printf("Build chart values for r.Spec.Values.Mariadb.Auth.Username -> %s", GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.Username, "slurm"))
 	values := map[string]interface{}{
 		"nameOverride":      r.Spec.Values.NameOverride,
 		"fullnameOverride":  r.Spec.Values.FullnameOverride,
 		"commonAnnotations": r.Spec.Values.CommonAnnotations,
-		"commonLables":      r.Spec.Values.CommonLables,
+		"commonLabels":      r.Spec.Values.CommonLabels,
 		"mariadb": map[string]interface{}{
 			"enabled": r.Spec.Values.Mariadb.Enabled,
 			"port":    r.Spec.Values.Mariadb.Port,
 			"auth": map[string]interface{}{
-				"username": r.Spec.Values.Mariadb.Auth.Username,
-				"password": r.Spec.Values.Mariadb.Auth.Password,
-				"database": r.Spec.Values.Mariadb.Auth.DatabaseName,
+				"username": GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.Username, "slurm"),
+				"password": GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.Password, "password-for-slurm"),
+				"database": GetValueWithDefault(&r.Spec.Values.Mariadb.Auth.DatabaseName, "slurm_acct_db"),
 			},
 			"primary": map[string]interface{}{
 				"persistence": map[string]interface{}{
@@ -91,7 +105,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 						"authorizedKeys": r.Spec.Values.Auth.SSH.Secret.Keys.AuthorizedKeys,
 					},
 				},
-				"configMap": map[string]interface{}{
+				"configmap": map[string]interface{}{
 					"name":          r.Spec.Values.Auth.SSH.ConfigMap.Name,
 					"prefabPubKeys": r.Spec.Values.Auth.SSH.ConfigMap.PrefabPubKeys,
 				},
@@ -107,7 +121,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"size":          r.Spec.Values.Persistence.Shared.Size,
 			},
 		},
-		"resourcesPreset": "small",
+		"resourcesPreset": "nano",
 		"munged": map[string]interface{}{
 			"enabled":      true,
 			"commonLabels": []string{},
@@ -118,7 +132,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"pullPolicy":  r.Spec.Values.Munged.Image.PullPolicy,
 				"pullSecrets": r.Spec.Values.Munged.Image.PullSecrets,
 			},
-			"diagnoticMode": map[string]interface{}{
+			"diagnosticMode": map[string]interface{}{
 				"enabled": r.Spec.Values.Munged.DiagnosticMode.Enabled,
 				"command": r.Spec.Values.Munged.DiagnosticMode.Command,
 				"args":    r.Spec.Values.Munged.DiagnosticMode.Args,
@@ -146,7 +160,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 					"pullSecrets": r.Spec.Values.Slurmctld.CheckDNS.Image.PullSecrets,
 				},
 			},
-			"diagnoticMode": map[string]interface{}{
+			"diagnosticMode": map[string]interface{}{
 				"enabled": r.Spec.Values.Slurmctld.DiagnosticMode.Enabled,
 				"command": r.Spec.Values.Slurmctld.DiagnosticMode.Command,
 				"args":    r.Spec.Values.Slurmctld.DiagnosticMode.Args,
@@ -239,7 +253,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"pullPolicy":  r.Spec.Values.Slurmd.Image.PullPolicy,
 				"pullSecrets": r.Spec.Values.Slurmd.Image.PullSecrets,
 			},
-			"diagnoticMode": map[string]interface{}{
+			"diagnosticMode": map[string]interface{}{
 				"enabled": r.Spec.Values.Slurmd.DiagnosticMode.Enabled,
 				"command": r.Spec.Values.Slurmd.DiagnosticMode.Command,
 				"args":    r.Spec.Values.Slurmd.DiagnosticMode.Args,
@@ -338,7 +352,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"pullPolicy":  r.Spec.Values.Slurmdbd.Image.PullPolicy,
 				"pullSecrets": r.Spec.Values.Slurmdbd.Image.PullSecrets,
 			},
-			"diagnoticMode": map[string]interface{}{
+			"diagnosticMode": map[string]interface{}{
 				"enabled": r.Spec.Values.Slurmdbd.DiagnosticMode.Enabled,
 				"command": r.Spec.Values.Slurmdbd.DiagnosticMode.Command,
 				"args":    r.Spec.Values.Slurmdbd.DiagnosticMode.Args,
@@ -442,7 +456,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"pullPolicy":  r.Spec.Values.SlurmLogin.Image.PullPolicy,
 				"pullSecrets": r.Spec.Values.SlurmLogin.Image.PullSecrets,
 			},
-			"diagnoticMode": map[string]interface{}{
+			"diagnosticMode": map[string]interface{}{
 				"enabled": r.Spec.Values.SlurmLogin.DiagnosticMode.Enabled,
 				"command": r.Spec.Values.SlurmLogin.DiagnosticMode.Command,
 				"args":    r.Spec.Values.SlurmLogin.DiagnosticMode.Args,
@@ -526,7 +540,71 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 		},
 		"serviceAccount": map[string]interface{}{
-			"automount": true,
+			"automount":   true,
+			"annotations": map[string]string{},
+			"name":        "slurm",
+			"role": map[string]string{
+				"name": "slurm",
+			},
+			"roleBinding": map[string]string{
+				"name": "slurm",
+			},
+		},
+		"configuration": map[string]interface{}{
+			"cgroup": map[string]interface{}{
+				"name": "cgroup-conf",
+				"value": `ConstrainCores=yes
+ConstrainDevices=yes
+ConstrainRAMSpace=yes
+ConstrainSwapSpace=no`,
+			},
+			"slurmConf": `ClusterName=slurm-cluster
+SlurmctldHost={{ include "common.names.fullname" . }}-{{ .Values.slurmctld.name }}-0
+MpiDefault=pmi2
+ProctrackType=proctrack/cgroup
+ReturnToService=1
+SlurmctldPidFile=/var/run/slurmctld.pid
+SlurmctldPort={{ .Values.slurmctld.service.slurmctld.port }}
+SlurmdPidFile=/var/run/slurmd.pid
+SlurmdPort={{ .Values.slurmd.service.slurmd.port }}
+SlurmdSpoolDir=/var/spool/slurmd
+SlurmUser=slurm
+StateSaveLocation=/var/spool/slurmctld
+TaskPlugin=task/affinity,task/cgroup
+InactiveLimit=0
+KillWait=30
+MinJobAge=300
+SlurmctldTimeout=120
+SlurmdTimeout=300
+Waittime=0
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+AccountingStorageHost={{ include "common.names.fullname" . }}-{{ .Values.slurmdbd.name }}-0
+AccountingStoragePort={{ .Values.slurmdbd.service.slurmdbd.port }}
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStoreFlags=job_comment
+JobAcctGatherType=jobacct_gather/linux
+JobAcctGatherFrequency=30
+SlurmctldDebug=info
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdDebug=info
+SlurmdLogFile=/var/log/slurm/slurmd.log
+NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs={{ .Values.slurmd.resources.requests.cpu }} CoresPerSocket=6 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
+PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP`,
+			"slurmdbdConf": `AuthType=auth/munge
+AuthInfo=/var/run/munge/munge.socket.2
+SlurmUser=slurm
+DebugLevel=verbose
+LogFile=/var/log/slurm/slurmdbd.log
+PidFile=/var/run/slurmdbd.pid
+DbdHost={{ include "common.names.fullname" . }}-{{ .Values.slurmdbd.name }}-0
+DbdPort={{ .Values.slurmdbd.service.slurmdbd.port }}
+StorageType=accounting_storage/mysql
+StorageHost={{ include "common.names.fullname" . }}-mariadb
+StoragePort={{ .Values.mariadb.port }}
+StoragePass={{ .Values.mariadb.auth.password }}
+StorageUser={{ .Values.mariadb.auth.username }}
+StorageLoc={{ .Values.mariadb.auth.database }}`,
 		},
 	}
 	return values
@@ -552,6 +630,7 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	// build values yaml content for Slurm Chart
 	values := buildChartValues(release)
+	log.Printf("Values Yaml: %v", values)
 
 	// Check release if exists
 	histClient := action.NewHistory(actionConfig)

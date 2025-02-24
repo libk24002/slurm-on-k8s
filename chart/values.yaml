@@ -464,4 +464,4 @@ configuration:
 nameOverride: ""
 fullnameOverride: ""
 commonAnnotations: []
-commonLables: []
+commonLabels: []

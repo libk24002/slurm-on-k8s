@@ -152,7 +152,6 @@ type SlurmctldSpec struct {
 	Name         string            `json:"name"`
 	CommonLabels map[string]string `json:"commonLabels,omitempty"`
 	Image        ImageSpec         `json:"image"`
-	CheckDNS     SlurmctldCheckDNS `json:"checkDns"`
 	// +kubebuilder:default=1
 	ReplicaCount      int32                   `json:"replicaCount"`
 	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
@@ -160,9 +159,6 @@ type SlurmctldSpec struct {
 	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
-type SlurmctldCheckDNS struct {
-	Image ImageSpec `json:"image"`
-}
 
 type SlurmdSpec struct {
 	// +kubebuilder:default="slurmd"

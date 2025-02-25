@@ -162,15 +162,6 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"pullPolicy":  r.Spec.Values.Slurmctld.Image.PullPolicy,
 				"pullSecrets": r.Spec.Values.Slurmctld.Image.PullSecrets,
 			},
-			"checkDns": map[string]interface{}{
-				"image": map[string]interface{}{
-					"registry":    r.Spec.Values.Slurmctld.CheckDNS.Image.Registry,
-					"repository":  r.Spec.Values.Slurmctld.CheckDNS.Image.Repository,
-					"tag":         r.Spec.Values.Slurmctld.CheckDNS.Image.Tag,
-					"pullPolicy":  r.Spec.Values.Slurmctld.CheckDNS.Image.PullPolicy,
-					"pullSecrets": r.Spec.Values.Slurmctld.CheckDNS.Image.PullSecrets,
-				},
-			},
 			"diagnosticMode": map[string]interface{}{
 				"enabled": r.Spec.Values.Slurmctld.DiagnosticMode.Enabled,
 				"command": r.Spec.Values.Slurmctld.DiagnosticMode.Command,
@@ -442,18 +433,6 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 					"port":       6819,
 					"targetPort": 6819,
 				},
-			},
-			"volumePermissions": map[string]interface{}{
-				"image": map[string]interface{}{
-					"registry":    "docker.io",
-					"repository":  "bitnami/os-shell",
-					"tag":         "12-debian-12-r30",
-					"pullPolicy":  "IfNotPresent",
-					"pullSecrets": []string{},
-				},
-				"volumePath":   "/etc/slurm/slurmdbd.conf",
-				"containerUID": 1109,
-				"containerGID": 1109,
 			},
 		},
 		"login": map[string]interface{}{

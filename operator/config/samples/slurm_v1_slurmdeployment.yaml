@@ -60,13 +60,6 @@ spec:
         pullSecrets: []
       extraVolumes: []
       extraVolumeMounts: []
-      checkDns:
-        image:
-          registry: docker.io
-          repository: library/busybox
-          tag: 1.37.0-glibc
-          pullPolicy: IfNotPresent
-          pullSecrets: []
     login:
       image:
         registry: docker-registry.lab.zverse.space

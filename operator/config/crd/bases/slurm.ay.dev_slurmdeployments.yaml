@@ -226,6 +226,10 @@ spec:
                         properties:
                           limits:
                             properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
                               cpu:
                                 default: 3000m
                                 type: string
@@ -242,6 +246,10 @@ spec:
                             type: object
                           requests:
                             properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
                               cpu:
                                 default: 500m
                                 type: string
@@ -541,6 +549,10 @@ spec:
                         properties:
                           limits:
                             properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
                               cpu:
                                 default: 3000m
                                 type: string
@@ -557,6 +569,10 @@ spec:
                             type: object
                           requests:
                             properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
                               cpu:
                                 default: 500m
                                 type: string
@@ -659,6 +675,10 @@ spec:
                         properties:
                           limits:
                             properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
                               cpu:
                                 default: 3000m
                                 type: string
@@ -675,6 +695,10 @@ spec:
                             type: object
                           requests:
                             properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
                               cpu:
                                 default: 500m
                                 type: string

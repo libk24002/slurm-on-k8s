@@ -174,11 +174,13 @@ type SlurmdSpec struct {
 }
 
 type ResourceSpec struct {
-	Requests ResourceRequestSpec `json:"requests"`
-	Limits   *ResourceLimitSpec  `json:"limits,omitempty"`
+	Requests *ResourceRequestSpec `json:"requests"`
+	Limits   *ResourceLimitSpec   `json:"limits,omitempty"`
 }
 
 type ResourceRequestSpec struct {
+	// +kubebuilder:default=1
+	Core int32 `json:"core,omitempty"`
 	// +kubebuilder:default="500m"
 	CPU string `json:"cpu"`
 	// +kubebuilder:default="1Gi"
@@ -188,6 +190,8 @@ type ResourceRequestSpec struct {
 }
 
 type ResourceLimitSpec struct {
+	// +kubebuilder:default=1
+	Core int32 `json:"core,omitempty"`
 	// +kubebuilder:default="3000m"
 	CPU string `json:"cpu"`
 	// +kubebuilder:default="2Gi"

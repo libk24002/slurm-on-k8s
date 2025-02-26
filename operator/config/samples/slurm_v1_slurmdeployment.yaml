@@ -10,7 +10,7 @@ spec:
     name: slurm
     repository: https://aaronyang0628.github.io/slurm-on-k8s/chart
     version: 1.0.3
-    namespace: slurm
+    namespace: test
   values:
     mariadb:
       enabled: true
@@ -33,6 +33,9 @@ spec:
         name: slurm-shared-storage
         storageClass: ""
         size: 8Gi
+    image:
+      mirror:
+        registry: m.lab.zverse.space/
     munged:
       image:
         registry: docker-registry.lab.zverse.space
@@ -88,6 +91,7 @@ spec:
         pullSecrets: []
       resources: 
         requests:
+          core: 8
           cpu: 500m
           ephemeral-storage: 10Gi
           memory: 1Gi

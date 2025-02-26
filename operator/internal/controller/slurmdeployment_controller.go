@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	os_runtime "runtime"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -84,11 +85,53 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		}
 	}
 
+	if r.Spec.Values.Slurmctld.Resources == nil {
+		r.Spec.Values.Slurmctld.Resources = &slurmv1.ResourceSpec{
+			Requests: &slurmv1.ResourceRequestSpec{
+				Core:             8,
+				CPU:              "1000m",
+				Memory:           "1Gi",
+				EphemeralStorage: "10Gi",
+			},
+			Limits: &slurmv1.ResourceLimitSpec{
+				Core:             8,
+				CPU:              "2000m",
+				Memory:           "2Gi",
+				EphemeralStorage: "20Gi",
+			},
+		}
+	}
+
+	if r.Spec.Values.Slurmd.Resources.Limits == nil {
+		r.Spec.Values.Slurmd.Resources.Limits = &slurmv1.ResourceLimitSpec{
+			CPU:              "8000m",
+			Memory:           "8Gi",
+			EphemeralStorage: "20Gi",
+		}
+	}
+
+	if r.Spec.Values.SlurmLogin.Resources.Limits == nil {
+		r.Spec.Values.SlurmLogin.Resources.Limits = &slurmv1.ResourceLimitSpec{
+			CPU:              "8000m",
+			Memory:           "8Gi",
+			EphemeralStorage: "20Gi",
+		}
+	}
+
+	if r.Spec.Values.Slurmd.Resources.Requests.Core == 0 {
+		r.Spec.Values.Slurmd.Resources.Requests.Core = int32(os_runtime.NumCPU())
+	}
+
 	values := map[string]interface{}{
 		"nameOverride":      r.Spec.Values.NameOverride,
 		"fullnameOverride":  r.Spec.Values.FullnameOverride,
 		"commonAnnotations": r.Spec.Values.CommonAnnotations,
 		"commonLabels":      r.Spec.Values.CommonLabels,
+		"image": map[string]interface{}{
+			"mirror": map[string]string{
+				"registry": r.Spec.Values.ImageMirror.Mirror.Registry,
+			},
+		},
 		"mariadb": map[string]interface{}{
 			"enabled": r.Spec.Values.Mariadb.Enabled,
 			"port":    r.Spec.Values.Mariadb.Port,
@@ -134,7 +177,6 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		"resourcesPreset": r.Spec.Values.ResourcesPreset,
 		"munged": map[string]interface{}{
 			"name":         "munged",
-			"enabled":      true,
 			"commonLabels": map[string]string{},
 			"image": map[string]interface{}{
 				"registry":    r.Spec.Values.Munged.Image.Registry,
@@ -210,7 +252,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 					"memory":            r.Spec.Values.Slurmctld.Resources.Requests.Memory,
 					"ephemeral-storage": r.Spec.Values.Slurmctld.Resources.Requests.EphemeralStorage,
 				},
-				"limit": map[string]string{
+				"limits": map[string]string{
 					"cpu":               r.Spec.Values.Slurmctld.Resources.Limits.CPU,
 					"memory":            r.Spec.Values.Slurmctld.Resources.Limits.Memory,
 					"ephemeral-storage": r.Spec.Values.Slurmctld.Resources.Limits.EphemeralStorage,
@@ -604,7 +646,7 @@ SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
-NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs={{ .Values.slurmd.resources.requests.cpu }} CoresPerSocket=6 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
+NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.Slurmd.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.Slurmd.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
 PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP`,
 			"slurmdbdConf": `AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2

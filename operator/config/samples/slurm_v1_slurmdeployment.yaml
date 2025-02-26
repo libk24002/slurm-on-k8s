@@ -9,7 +9,7 @@ spec:
   chart:
     name: slurm
     repository: https://aaronyang0628.github.io/slurm-on-k8s/chart
-    version: 1.0.2
+    version: 1.0.3
     namespace: slurm
   values:
     mariadb:

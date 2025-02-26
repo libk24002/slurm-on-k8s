@@ -154,11 +154,11 @@ type SlurmctldSpec struct {
 	Image        ImageSpec         `json:"image"`
 	// +kubebuilder:default=1
 	ReplicaCount      int32                   `json:"replicaCount"`
+	Resources         *ResourceSpec           `json:"resources,omitempty"`
 	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
 	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
 	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
-
 
 type SlurmdSpec struct {
 	// +kubebuilder:default="slurmd"
@@ -249,17 +249,28 @@ type CgroupSpec struct {
 	Value string `json:"value"`
 }
 
+type ImageMirrorSpec struct {
+	Mirror MirrorSpec `json:"mirror"`
+}
+
+type MirrorSpec struct {
+	Registry string `json:"registry"`
+}
+
 type ValuesSpec struct {
-	Mariadb        MariaDBSpec        `json:"mariadb"`
-	Auth           AuthSpec           `json:"auth,omitempty"`
-	Persistence    PersistenceSpec    `json:"persistence,omitempty"`
-	Munged         MungedSpec         `json:"munged"`
-	Slurmctld      SlurmctldSpec      `json:"slurmctld"`
-	Slurmd         SlurmdSpec         `json:"slurmd"`
-	Slurmdbd       SlurmdbdSpec       `json:"slurmdbd"`
-	SlurmLogin     SlurmLogindSpec    `json:"login"`
-	ServiceAccount ServiceAccountSpec `json:"serviceAccount,omitempty"`
-	SlurmConfig    SlurmConfigSpec    `json:"configuration,omitempty"`
+	Mariadb     MariaDBSpec     `json:"mariadb"`
+	Auth        AuthSpec        `json:"auth,omitempty"`
+	Persistence PersistenceSpec `json:"persistence,omitempty"`
+	ImageMirror ImageMirrorSpec `json:"image,omitempty"`
+	Munged      MungedSpec      `json:"munged"`
+	Slurmctld   SlurmctldSpec   `json:"slurmctld"`
+	Slurmd      SlurmdSpec      `json:"slurmd"`
+	Slurmdbd    SlurmdbdSpec    `json:"slurmdbd"`
+	SlurmLogin  SlurmLogindSpec `json:"login"`
+	// +kubebuilder:default="nano"
+	ResourcesPreset string             `json:"resourcesPreset,omitempty"`
+	ServiceAccount  ServiceAccountSpec `json:"serviceAccount,omitempty"`
+	SlurmConfig     SlurmConfigSpec    `json:"configuration,omitempty"`
 	// +kubebuilder:default=""
 	NameOverride string `json:"nameOverride,omitempty"`
 	// +kubebuilder:default=""
@@ -299,11 +310,13 @@ func (v *ValuesSpec) UnmarshalJSON(data []byte) error {
 		Mariadb           MariaDBSpec        `json:"mariadb"`
 		Auth              AuthSpec           `json:"auth,omitempty"`
 		Persistence       PersistenceSpec    `json:"persistence,omitempty"`
+		ImageMirror       ImageMirrorSpec    `json:"image,omitempty"`
 		Munged            MungedSpec         `json:"munged"`
 		Slurmctld         SlurmctldSpec      `json:"slurmctld"`
 		Slurmd            SlurmdSpec         `json:"slurmd"`
 		Slurmdbd          SlurmdbdSpec       `json:"slurmdbd"`
 		SlurmLogin        SlurmLogindSpec    `json:"login"`
+		ResourcesPreset   string             `json:"resourcesPreset,omitempty"`
 		ServiceAccount    ServiceAccountSpec `json:"serviceAccount,omitempty"`
 		SlurmConfig       SlurmConfigSpec    `json:"configuration,omitempty"`
 		NameOverride      string             `json:"nameOverride,omitempty"`
@@ -315,13 +328,15 @@ func (v *ValuesSpec) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	v.Mariadb = aux.Mariadb
-	v.Mariadb = aux.Mariadb
-	v.Mariadb = aux.Mariadb
+	v.Auth = aux.Auth
+	v.Persistence = aux.Persistence
+	v.ImageMirror = aux.ImageMirror
 	v.Munged = aux.Munged
 	v.Slurmctld = aux.Slurmctld
 	v.Slurmd = aux.Slurmd
 	v.Slurmdbd = aux.Slurmdbd
 	v.SlurmLogin = aux.SlurmLogin
+	v.ResourcesPreset = aux.ResourcesPreset
 	v.ServiceAccount = aux.ServiceAccount
 	v.SlurmConfig = aux.SlurmConfig
 	v.NameOverride = aux.NameOverride

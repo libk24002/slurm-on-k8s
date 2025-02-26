@@ -138,6 +138,18 @@ spec:
                   fullnameOverride:
                     default: ""
                     type: string
+                  image:
+                    properties:
+                      mirror:
+                        properties:
+                          registry:
+                            type: string
+                        required:
+                        - registry
+                        type: object
+                    required:
+                    - mirror
+                    type: object
                   login:
                     properties:
                       commonLabels:
@@ -411,6 +423,9 @@ spec:
                     required:
                     - shared
                     type: object
+                  resourcesPreset:
+                    default: nano
+                    type: string
                   serviceAccount:
                     properties:
                       annotations:
@@ -448,36 +463,6 @@ spec:
                     type: object
                   slurmctld:
                     properties:
-                      checkDns:
-                        properties:
-                          image:
-                            properties:
-                              pullPolicy:
-                                default: IfNotPresent
-                                type: string
-                              pullSecrets:
-                                items:
-                                  type: string
-                                type: array
-                              registry:
-                                default: localhost
-                                type: string
-                              repository:
-                                default: data-and-computing
-                                type: string
-                              tag:
-                                default: latest
-                                type: string
-                            required:
-                            - pullPolicy
-                            - pullSecrets
-                            - registry
-                            - repository
-                            - tag
-                            type: object
-                        required:
-                        - image
-                        type: object
                       commonLabels:
                         additionalProperties:
                           type: string
@@ -552,8 +537,44 @@ spec:
                         default: 1
                         format: int32
                         type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 3000m
+                                type: string
+                              ephemeral-storage:
+                                default: 8Gi
+                                type: string
+                              memory:
+                                default: 2Gi
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              ephemeral-storage:
+                                default: 2Gi
+                                type: string
+                              memory:
+                                default: 1Gi
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                        required:
+                        - requests
+                        type: object
                     required:
-                    - checkDns
                     - image
                     - name
                     - replicaCount

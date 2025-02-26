@@ -131,7 +131,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"size":          r.Spec.Values.Persistence.Shared.Size,
 			},
 		},
-		"resourcesPreset": "nano",
+		"resourcesPreset": r.Spec.Values.ResourcesPreset,
 		"munged": map[string]interface{}{
 			"name":         "munged",
 			"enabled":      true,
@@ -171,6 +171,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"podLabels":                    map[string]string{},
 			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
+			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
 				"type":   "",
@@ -187,7 +188,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
 			"podSecurityContext": map[string]interface{}{
-				"enabled":             false,
+				"enabled":             true,
 				"fsGroup":             0,
 				"fsGroupChangePolicy": "Always",
 				"supplementalGroups":  []string{},
@@ -202,8 +203,19 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"type":          "RollingUpdate",
 				"rollingUpdate": map[string]string{},
 			},
-			"lifecycleHooks":    map[string]string{},
-			"resources":         map[string]string{},
+			"lifecycleHooks": map[string]string{},
+			"resources": map[string]interface{}{
+				"requests": map[string]string{
+					"cpu":               r.Spec.Values.Slurmctld.Resources.Requests.CPU,
+					"memory":            r.Spec.Values.Slurmctld.Resources.Requests.Memory,
+					"ephemeral-storage": r.Spec.Values.Slurmctld.Resources.Requests.EphemeralStorage,
+				},
+				"limit": map[string]string{
+					"cpu":               r.Spec.Values.Slurmctld.Resources.Limits.CPU,
+					"memory":            r.Spec.Values.Slurmctld.Resources.Limits.Memory,
+					"ephemeral-storage": r.Spec.Values.Slurmctld.Resources.Limits.EphemeralStorage,
+				},
+			},
 			"extraVolumes":      r.Spec.Values.Slurmctld.ExtraVolumes,
 			"extraVolumeMounts": r.Spec.Values.Slurmctld.ExtraVolumeMounts,
 			"livenessProbe": map[string]interface{}{
@@ -264,6 +276,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"podLabels":                    map[string]string{},
 			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
+			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
 				"type":   "",
@@ -280,7 +293,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
 			"podSecurityContext": map[string]interface{}{
-				"enabled":             false,
+				"enabled":             true,
 				"fsGroup":             0,
 				"fsGroupChangePolicy": "Always",
 				"supplementalGroups":  []string{},
@@ -301,6 +314,11 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 					"cpu":               r.Spec.Values.Slurmd.Resources.Requests.CPU,
 					"memory":            r.Spec.Values.Slurmd.Resources.Requests.Memory,
 					"ephemeral-storage": r.Spec.Values.Slurmd.Resources.Requests.EphemeralStorage,
+				},
+				"limits": map[string]string{
+					"cpu":               r.Spec.Values.Slurmd.Resources.Limits.CPU,
+					"memory":            r.Spec.Values.Slurmd.Resources.Limits.Memory,
+					"ephemeral-storage": r.Spec.Values.Slurmd.Resources.Limits.EphemeralStorage,
 				},
 			},
 			"extraVolumes":      r.Spec.Values.Slurmd.ExtraVolumes,
@@ -363,6 +381,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"podLabels":                    map[string]string{},
 			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
+			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
 				"type":   "",
@@ -379,7 +398,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
 			"podSecurityContext": map[string]interface{}{
-				"enabled":             false,
+				"enabled":             true,
 				"fsGroup":             0,
 				"fsGroupChangePolicy": "Always",
 				"supplementalGroups":  []string{},
@@ -455,6 +474,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"podLabels":                    map[string]string{},
 			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
+			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
 				"type":   "",
@@ -471,7 +491,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
 			"podSecurityContext": map[string]interface{}{
-				"enabled":             false,
+				"enabled":             true,
 				"fsGroup":             0,
 				"fsGroupChangePolicy": "Always",
 				"supplementalGroups":  []string{},
@@ -492,6 +512,11 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 					"cpu":               r.Spec.Values.SlurmLogin.Resources.Requests.CPU,
 					"memory":            r.Spec.Values.SlurmLogin.Resources.Requests.Memory,
 					"ephemeral-storage": r.Spec.Values.SlurmLogin.Resources.Requests.EphemeralStorage,
+				},
+				"limits": map[string]string{
+					"cpu":               r.Spec.Values.SlurmLogin.Resources.Limits.CPU,
+					"memory":            r.Spec.Values.SlurmLogin.Resources.Limits.Memory,
+					"ephemeral-storage": r.Spec.Values.SlurmLogin.Resources.Limits.EphemeralStorage,
 				},
 			},
 			"extraVolumes":      r.Spec.Values.SlurmLogin.ExtraVolumes,

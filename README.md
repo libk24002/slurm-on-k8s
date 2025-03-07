@@ -25,7 +25,7 @@ Slurm on Kubernetes provides the following features:
 - for helm user
     > just run for fun!
     1. `helm repo add slurm https://aaronyang0628.github.io/slurm-on-k8s/`
-    2. `helm install slurm slurm/chart --version 1.0.2`
+    2. `helm install slurm slurm/chart --version 1.0.X`
 
 - for developer
     > you might need to build your own images or chart

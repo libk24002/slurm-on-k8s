@@ -8,7 +8,9 @@ metadata:
     app.kubernetes.io/component: slurmd
 spec:
   type: ClusterIP
-  clusterIP: None
+  {{- if and .Values.slurmd.service.clusterIP (eq .Values.slurmd.service.type "ClusterIP") }}
+  clusterIP: {{ .Values.slurmd.service.clusterIP }}
+  {{- end }}
   {{- if .Values.slurmctld.service.publishNotReadyAddresses }}
   publishNotReadyAddresses: {{ .Values.slurmctld.service.publishNotReadyAddresses }}
   {{- end }}

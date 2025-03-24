@@ -32,15 +32,15 @@ persistence:
     size: 8Gi
 image:
   mirror:
-    registry: m.lab.zverse.space/
+    registry: m.daocloud.io/
 resourcesPreset: "nano"
 munged:
   name: munged
   commonLabels: {}
   image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-munged
-    tag: "intelmpi-250208-r0"
+    registry: docker.io
+    repository: aaron666/munged
+    tag: "latest"
     pullPolicy: IfNotPresent
     pullSecrets: []
   diagnosticMode:
@@ -52,9 +52,9 @@ slurmctld:
   name: slurmctld
   commonLabels: {}
   image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-slurmctld
-    tag: "intelmpi-250208-r0"
+    registry: docker.io
+    repository: aaron666/slurm-slurmctld
+    tag: "latest"
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
@@ -134,9 +134,9 @@ slurmd:
   name: slurmd
   commonLabels: {}
   image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-slurmd
-    tag: "intelmpi-250208-r0"
+    registry: docker.io
+    repository: aaron666/slurm-slurmd
+    tag: "intel-mpi"
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 2
@@ -220,9 +220,9 @@ slurmdbd:
   name: slurmdbd
   commonLabels: {}
   image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-slurmdbd
-    tag: "intelmpi-250208-r0"
+    registry: docker.io
+    repository: aaron666/slurm-slurmdbd
+    tag: "latest"
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
@@ -302,9 +302,9 @@ login:
   name: login
   commonLabels: {}
   image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-login
-    tag: "intelmpi-250208-r0"
+    registry: docker.io
+    repository: aaron666/slurm-login
+    tag: "intel-mpi"
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1

@@ -4,12 +4,12 @@ metadata:
   labels:
     app.kubernetes.io/name: operator
     app.kubernetes.io/managed-by: kustomize
-  name: slurmdeployment
+  name: slurmdeployment-example
 spec:
   chart:
     name: slurm
-    repository: https://aaronyang0628.github.io/slurm-on-k8s/chart
-    version: 1.0.3
+    repository: https://aaronyang0628.github.io/helm-chart-mirror/charts/slurm
+    version: 1.0.4
     namespace: test
   values:
     mariadb:

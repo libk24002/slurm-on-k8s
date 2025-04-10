@@ -26,8 +26,15 @@ Slurm on Kubernetes provides the following features:
     > just run for fun!
     1. `helm repo add slurm https://aaronyang0628.github.io/slurm-on-k8s/`
     2. `helm install slurm slurm/chart --version 1.0.X`
+- for opertaor user
+    > pull an image and apply
+    1. `docker pull aaron666/slurm-operator:latest`
+    2. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/install.yaml`
+    3. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.values.yaml`
 
-- for developer
+
+
+- for image developer
     > you might need to build your own images or chart
     1. build images
         ```shell

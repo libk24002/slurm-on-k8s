@@ -32,7 +32,7 @@ persistence:
     size: 8Gi
 image:
   mirror:
-    registry: m.daocloud.io/
+    registry: docker-registry.lab.zverse.space/
 resourcesPreset: "nano"
 munged:
   name: munged
@@ -139,7 +139,7 @@ slurmd:
     tag: "intel-mpi"
     pullPolicy: IfNotPresent
     pullSecrets: []
-  replicaCount: 2
+  replicaCount: 1
   automountServiceAccountToken: false
   podLabels: {}
   affinity: {}
@@ -208,6 +208,96 @@ slurmd:
     successThreshold: 1
   service:
     name: slurmd-headless
+    ssh:
+      type: ClusterIP
+      port: 22
+      targetPort: 22
+    slurmd:
+      type: ClusterIP
+      port: 6818
+      targetPort: 6818
+slurmdGPU:
+  name: slurmd-gpu
+  commonLabels: {}
+  image:
+    registry: docker.io
+    repository: aaron666/slurm-slurmd
+    tag: "intel-mpi"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  replicaCount: 1
+  automountServiceAccountToken: false
+  podLabels: {}
+  affinity: {}
+  podAnnotations: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  hostNetwork: false
+  dnsPolicy: ""
+  dnsConfig: {}
+  hostIPC: false
+  priorityClassName: ""
+  nodeSelector: {}
+  tolerations: []
+  schedulerName: ""
+  topologySpreadConstraints: []
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    supplementalGroups: []
+    fsGroup: 0
+  terminationGracePeriodSeconds: ""
+  hostAliases: []
+  diagnosticMode:
+    enabled: false
+    command: []
+    args: []
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  revisionHistoryLimit: 10
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  lifecycleHooks: {}
+  resources: 
+    requests:
+      cpu: 500m
+      ephemeral-storage: 10Gi
+      memory: 1Gi
+    limits:
+      cpu: 1
+      ephemeral-storage: 10Gi
+      memory: 2Gi
+  extraVolumes: []
+  extraVolumeMounts: []
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  service:
+    name: slurmd-gpu-headless
     ssh:
       type: ClusterIP
       port: 22
@@ -430,6 +520,7 @@ configuration:
     SlurmdDebug=info
     SlurmdLogFile=/var/log/slurm/slurmd.log
     NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs=8 CoresPerSocket=8 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
+    NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-99] CPUs=8 CoresPerSocket=8 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
     PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP
   slurmdbdConf: |-
     AuthType=auth/munge

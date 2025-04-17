@@ -53,6 +53,7 @@ spec:
       dnsConfig:
         searches:
           - {{ .Values.slurmd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
           - {{ .Values.slurmdbd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
       {{- end }}
       hostIPC: {{ .Values.slurmctld.hostIPC }}

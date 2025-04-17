@@ -53,6 +53,7 @@ spec:
         searches:
           - {{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
           - {{ .Values.slurmd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
           - {{ .Values.slurmdbd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
       {{- end }}
       hostIPC: {{ .Values.login.hostIPC }}

@@ -32,7 +32,7 @@ persistence:
     size: 8Gi
 image:
   mirror:
-    registry: docker-registry.lab.zverse.space/
+    registry: m.daocloud.io/
 resourcesPreset: "nano"
 munged:
   name: munged

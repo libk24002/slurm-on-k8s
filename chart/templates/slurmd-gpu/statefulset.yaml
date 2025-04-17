@@ -1,7 +1,7 @@
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
-  name: {{ include "common.names.fullname" . }}--slurmd-gpu
+  name: {{ include "common.names.fullname" . }}-slurmd-gpu
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmdGPU.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: slurmd-gpu

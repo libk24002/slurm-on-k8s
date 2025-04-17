@@ -39,7 +39,7 @@ spec:
       targetPort: {{ .Values.slurmdGPU.service.ssh.targetPort }}
     {{- end }}
     {{- if .Values.slurmdGPU.service.slurmd }}
-    - name: slurmd-gpu
+    - name: slurmd
       port: {{ .Values.slurmdGPU.service.slurmd.port }}
       targetPort: {{ .Values.slurmdGPU.service.slurmd.targetPort }}
     {{- end }}

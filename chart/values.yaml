@@ -32,7 +32,7 @@ persistence:
     size: 8Gi
 image:
   mirror:
-    registry: docker-registry.lab.zverse.space/
+    registry: m.daocloud.io
 resourcesPreset: "nano"
 munged:
   name: munged
@@ -130,8 +130,7 @@ slurmctld:
       type: ClusterIP
       port: 6817
       targetPort: 6817
-slurmd:
-  name: slurmd
+slurmdCPU:
   commonLabels: {}
   image:
     registry: docker.io
@@ -207,7 +206,7 @@ slurmd:
     failureThreshold: 3
     successThreshold: 1
   service:
-    name: slurmd-headless
+    name: slurmd-cpu-headless
     ssh:
       type: ClusterIP
       port: 22
@@ -217,7 +216,6 @@ slurmd:
       port: 6818
       targetPort: 6818
 slurmdGPU:
-  name: slurmd-gpu
   commonLabels: {}
   image:
     registry: docker.io
@@ -269,10 +267,12 @@ slurmdGPU:
       cpu: 500m
       ephemeral-storage: 10Gi
       memory: 1Gi
+      nvidia.com/gpu.shared: 1
     limits:
       cpu: 1
       ephemeral-storage: 10Gi
       memory: 2Gi
+      nvidia.com/gpu.shared: 1
   extraVolumes: []
   extraVolumeMounts: []
   livenessProbe:
@@ -496,7 +496,7 @@ configuration:
     SlurmctldPidFile=/var/run/slurmctld.pid
     SlurmctldPort={{ .Values.slurmctld.service.slurmctld.port }}
     SlurmdPidFile=/var/run/slurmd.pid
-    SlurmdPort={{ .Values.slurmd.service.slurmd.port }}
+    SlurmdPort=6818
     SlurmdSpoolDir=/var/spool/slurmd
     SlurmUser=slurm
     StateSaveLocation=/var/spool/slurmctld
@@ -519,7 +519,7 @@ configuration:
     SlurmctldLogFile=/var/log/slurm/slurmctld.log
     SlurmdDebug=info
     SlurmdLogFile=/var/log/slurm/slurmd.log
-    NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs=8 CoresPerSocket=8 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
+    NodeName={{ include "common.names.fullname" . }}-slurmd-cpu-[0-999] CPUs=8 CoresPerSocket=8 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
     NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-99] CPUs=8 CoresPerSocket=8 ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
     PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP
   slurmdbdConf: |-

@@ -1,7 +1,7 @@
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
-  name: {{ include "common.names.fullname" . }}-{{ .Values.slurmdGPU.name }}
+  name: {{ include "common.names.fullname" . }}--slurmd-gpu
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmdGPU.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: slurmd-gpu
@@ -53,12 +53,15 @@ spec:
       dnsConfig:
         searches:
           - {{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Values.slurmdCPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
           - {{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
       {{- end }}
       hostIPC: {{ .Values.slurmdGPU.hostIPC }}
-      {{- if .Values.slurmd.priorityClassName }}
+      {{- if .Values.slurmdGPU.priorityClassName }}
       priorityClassName: {{ .Values.slurmdGPU.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.slurmdGPU.nodeName }}
+      nodeName: {{ .Values.slurmdGPU.nodeName | quote }}
       {{- end }}
       {{- if .Values.slurmdGPU.nodeSelector }}
       nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.slurmdGPU.nodeSelector "context" $) | nindent 8 }}
@@ -80,7 +83,11 @@ spec:
       {{- end }}
       initContainers:
         - name: init-permission
-          image: {{ .Values.image.mirror.registry }}docker.io/library/busybox:1.37.0-glibc
+          {{- if .Values.image.mirror.registry }}
+          image: {{ .Values.image.mirror.registry }}/docker.io/library/busybox:1.37.0-glibc
+          {{- else }}
+          image: docker.io/library/busybox:1.37.0-glibc
+          {{- end }}
           command: ["sh", "-c", "chmod 755 /run/munge && chown 1108:1108 /run/munge"]
           volumeMounts:
             - name: munge-socket-file
@@ -112,7 +119,7 @@ spec:
             {{- end }}
         - name: slurmd-gpu
           image: "{{ .Values.slurmdGPU.image.registry }}/{{ .Values.slurmdGPU.image.repository }}:{{ .Values.slurmdGPU.image.tag }}"
-          imagePullPolicy: {{ .Values.slurmd.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.slurmdGPU.image.pullPolicy }}
           {{- if .Values.slurmdGPU.containerSecurityContext }}
           securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmdGPU.containerSecurityContext "context" $) | nindent 12 }}
           {{- else }}
@@ -148,7 +155,7 @@ spec:
           ports:
             - name: ssh
               containerPort: {{ .Values.slurmdGPU.service.ssh.port }}
-            - name: slurmd-gpu
+            - name: slurmd
               containerPort: {{ .Values.slurmdGPU.service.slurmd.port }}
             {{- if .Values.slurmdGPU.extraContainerPorts }}
             {{- include "common.tplvalues.render" (dict "value" .Values.slurmdGPU.extraContainerPorts "context" $) | nindent 12 }}

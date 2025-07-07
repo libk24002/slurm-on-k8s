@@ -2,6 +2,7 @@ mariadb:
   enabled: true
   port: 3306
   auth:
+    rootPassword: "password-for-root"
     username: "slurm"
     password: "password-for-slurm"
     database: "slurm_acct_db"

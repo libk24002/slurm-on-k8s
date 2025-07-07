@@ -46,6 +46,8 @@ type MariaDBAuthSpec struct {
 	Username string `json:"username,omitempty"`
 	// +kubebuilder:default="password-for-slurm"
 	Password string `json:"password,omitempty"`
+	// +kubebuilder:default="rootpassword-for-slurm"
+	RootPassword string `json:"rootPassword,omitempty"`
 	// +kubebuilder:default="slurm_acct_db"
 	DatabaseName string `json:"database,omitempty"`
 }

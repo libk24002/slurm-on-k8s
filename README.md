@@ -20,12 +20,14 @@ Slurm on Kubernetes provides the following features:
 
 ### Usage
 
-> if you wanna change slurm configuration ,please check slurm configuration generator [click](https://slurm.schedmd.com/configurator.html)
+> if you wanna change slurm configuration ,please check slurm configuration generator, check [link](https://slurm.schedmd.com/configurator.html)
 
-- for helm user
-    > just run for fun!
-    1. `helm repo add slurm https://aaronyang0628.github.io/slurm-on-k8s/`
-    2. `helm install slurm slurm/chart --version 1.0.X`
+- for github helm user
+    1. `helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts`
+    2. `helm install slurm ay-helm-mirror/chart --version 1.0.6`
+- for artifact helm user
+    1. `helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts`
+    2. `helm install slurm ay-helm-mirror/chart --version 1.0.6`
 - for opertaor user
     > pull an image and apply
     1. `docker pull aaron666/slurm-operator:latest`

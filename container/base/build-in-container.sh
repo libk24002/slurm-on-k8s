@@ -8,6 +8,6 @@ podman run --rm \
     -v $SCRIPT_DIR/../../..:/code \
     --privileged \
     -e OS_BASE_IMAGE=docker.io/library/debian:bookworm \
-    -it quay.io/containers/buildah:v1.35.4 \
+    -it m.daocloud.io/quay.io/containers/buildah:v1.35.4 \
     bash /code/slurm/container/base/build.sh
 

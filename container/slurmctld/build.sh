@@ -2,9 +2,9 @@
 
 set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-IMAGE=${IMAGE:-localhost/ay-dev/slurm-slurmctld:latest}
-OS_BASE_IMAGE=${OS_BASE_IMAGE:-localhost/ay-dev/slurm-base:latest}
-BUILDER_IMAGE=${BUILDER_IMAGE:-localhost/ay-dev/slurm-builder:latest}
+IMAGE=${IMAGE:-ghcr.io/aaronyang0628/slurm-slurmctld:25.05}
+OS_BASE_IMAGE=${OS_BASE_IMAGE:-ghcr.io/aaronyang0628/slurm-base:25.05}
+BUILDER_IMAGE=${BUILDER_IMAGE:-ghcr.io/aaronyang0628/slurm-builder:25.05}
 TLS_VERIFY=${TLS_VERIFY:-false}
 docker build \
     --build-arg OS_BASE_IMAGE=${OS_BASE_IMAGE} \

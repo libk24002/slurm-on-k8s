@@ -1,7 +1,7 @@
 ARG OS_BASE_IMAGE=localhost/ay-dev/slurm-base:latest
 FROM ${OS_BASE_IMAGE}
 
-ARG SLURM_VERSION=24.05.3
+ARG SLURM_VERSION=25.05.0
 ARG BUILDER_IMAGE=localhost/ay-dev/slurm-builder:latest
 COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-slurmctld-dbgsym_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-slurmctld-dbgsym_${SLURM_VERSION}-1_amd64.deb
 COPY --from=localhost/ay-dev/slurm-builder:latest /opt/slurm/debs/slurm-smd-slurmctld_${SLURM_VERSION}-1_amd64.deb /opt/slurm/debs/slurm-smd-slurmctld_${SLURM_VERSION}-1_amd64.deb

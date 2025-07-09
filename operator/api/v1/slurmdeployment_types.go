@@ -130,8 +130,8 @@ type ImageSpec struct {
 type DiagnosticModeSpec struct {
 	// +kubebuilder:default=false
 	Enabled bool     `json:"enabled"`
-	Command []string `json:"command"`
-	Args    []string `json:"args"`
+	Command []string `json:"command,omitempty"`
+	Args    []string `json:"args,omitempty"`
 }
 
 type ExtraVolumeMountsSpec struct {
@@ -241,7 +241,7 @@ type SlurmLogindSpec struct {
 type ServiceAccountSpec struct {
 	// +kubebuilder:default=true
 	Automount   bool              `json:"automount"`
-	Annotations map[string]string `json:"annotations"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 	// +kubebuilder:default="slurm"
 	Name        string                        `json:"name"`
 	Role        ServiceAccountRoleSpec        `json:"role"`

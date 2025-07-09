@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/name: operator
     app.kubernetes.io/managed-by: kustomize
-  name: slurmdeployment-example
+  name: slurm
 spec:
   chart:
     name: slurm
@@ -35,39 +35,39 @@ spec:
         size: 8Gi
     image:
       mirror:
-        registry: m.daocloud.io
+        registry: m.lab.zverse.space
     munged:
       image:
-        registry: ghcr.io
-        repository: aaronyang0628/slurm-munged
-        tag: "25.05"
+        registry: docker-registry.lab.zverse.space
+        repository: data-and-computing/slurm-munged
+        tag: "intelmpi-250208-r0"
         pullPolicy: IfNotPresent
         pullSecrets: []
       extraVolumes: []
       extraVolumeMounts: []
     slurmdbd:
       image:
-        registry: ghcr.io
-        repository: aaronyang0628/slurm-slurmdbd
-        tag: "25.05"
+        registry: docker-registry.lab.zverse.space
+        repository: data-and-computing/slurm-slurmdbd
+        tag: intelmpi-250208-r0
         pullPolicy: IfNotPresent
         pullSecrets: []
       extraVolumes: []
       extraVolumeMounts: []
     slurmctld:
       image:
-        registry: ghcr.io
-        repository: aaronyang0628/slurm-slurmctld
-        tag: "25.05"
+        registry: docker-registry.lab.zverse.space
+        repository: data-and-computing/slurm-slurmctld
+        tag: intelmpi-250208-r0
         pullPolicy: IfNotPresent
         pullSecrets: []
       extraVolumes: []
       extraVolumeMounts: []
     login:
       image:
-        registry: ghcr.io
-        repository: aaronyang0628/slurm-login
-        tag: 25.05-open-mpi
+        registry: docker-registry.lab.zverse.space
+        repository: data-and-computing/slurm-login
+        tag: intelmpi-250208-r0-lensing-v4
         pullPolicy: IfNotPresent
         pullSecrets: []
       resources: 
@@ -84,9 +84,9 @@ spec:
     slurmdCPU:
       replicaCount: 1
       image:
-        registry: ghcr.io
-        repository: aaronyang0628/slurm-slurmd
-        tag: 25.05-open-mpi
+        registry: docker-registry.lab.zverse.space
+        repository: data-and-computing/slurm-slurmd
+        tag: intelmpi-250208-r0-lensing-v5.3
         pullPolicy: IfNotPresent
         pullSecrets: []
       resources: 
@@ -98,11 +98,11 @@ spec:
       extraVolumes: []
       extraVolumeMounts: []
     slurmdGPU:
-      replicaCount: 0
+      replicaCount: 1
       image:
-        registry: ghcr.io
-        repository: aaronyang0628/slurm-slurmd
-        tag: 25.05-open-mpi
+        registry: docker-registry.lab.zverse.space
+        repository: data-and-computing/slurm-slurmd
+        tag: intelmpi-250208-r0-lensing-v5.3
         pullPolicy: IfNotPresent
         pullSecrets: []
       resources: 

@@ -765,8 +765,8 @@ SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
-NodeName={{ include "common.names.fullname" . }}-slurmd-cpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Memory) + ` Procs=1 State=UNKNOWN
-NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Memory) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "common.names.fullname" . }}-slurmd-cpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%s", r.Spec.Values.SlurmdCPU.Resources.Requests.Memory) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%s", r.Spec.Values.SlurmdGPU.Resources.Requests.Memory) + ` Procs=1 State=UNKNOWN
 PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP`,
 			"slurmdbdConf": `AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2

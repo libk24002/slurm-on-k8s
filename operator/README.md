@@ -69,7 +69,7 @@ Following the options to release and provide this solution to the users.
 1. Build the installer for the image built and published in the registry:
 
 ```sh
-make build-installer IMG=aaron666/slurm-operator:latest
+make build-installer IMG=ghcr.io/aaronyang0628/slurm-operator:25.05
 ```
 
 **NOTE:** The makefile target mentioned above generates an 'install.yaml'

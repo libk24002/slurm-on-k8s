@@ -30,7 +30,7 @@ Slurm on Kubernetes provides the following features:
     2. `helm install slurm ay-helm-mirror/chart --version 1.0.6`
 - for opertaor user
     > pull an image and apply
-    1. `docker pull aaron666/slurm-operator:latest`
+    1. `docker pull ghcr.io/aaronyang0628/slurm-operator:25.05`
     2. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/operator_install.yaml`
     3. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.values.yaml`
 

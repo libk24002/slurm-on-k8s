@@ -7,7 +7,6 @@ buildah
 *.dylib
 operator/bin/*
 Dockerfile.cross
-operator/dist/*
 
 # Test binary, built with `go test -c`
 *.test

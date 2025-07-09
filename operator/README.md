@@ -16,7 +16,7 @@
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=aaron666/slurm-operator:20250409
+make docker-build docker-push IMG=ghcr.io/aaronyang0628/slurm-operator:25.05
 
 make run
 ```

@@ -79,6 +79,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 	}
 	if r.Spec.Values.Mariadb.Auth == nil {
 		r.Spec.Values.Mariadb.Auth = &slurmv1.MariaDBAuthSpec{
+			RootPassword: "password-for-root",
 			Username:     "slurm",
 			Password:     "password-for-slurm",
 			DatabaseName: "slurm_acct_db",
@@ -102,8 +103,16 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		}
 	}
 
-	if r.Spec.Values.Slurmd.Resources.Limits == nil {
-		r.Spec.Values.Slurmd.Resources.Limits = &slurmv1.ResourceLimitSpec{
+	if r.Spec.Values.SlurmdCPU.Resources.Limits == nil {
+		r.Spec.Values.SlurmdCPU.Resources.Limits = &slurmv1.ResourceLimitSpec{
+			CPU:              "8000m",
+			Memory:           "8Gi",
+			EphemeralStorage: "20Gi",
+		}
+	}
+
+	if r.Spec.Values.SlurmdGPU.Resources.Limits == nil {
+		r.Spec.Values.SlurmdGPU.Resources.Limits = &slurmv1.ResourceLimitSpec{
 			CPU:              "8000m",
 			Memory:           "8Gi",
 			EphemeralStorage: "20Gi",
@@ -118,8 +127,12 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		}
 	}
 
-	if r.Spec.Values.Slurmd.Resources.Requests.Core == 0 {
-		r.Spec.Values.Slurmd.Resources.Requests.Core = int32(os_runtime.NumCPU())
+	if r.Spec.Values.SlurmdCPU.Resources.Requests.Core == 0 {
+		r.Spec.Values.SlurmdCPU.Resources.Requests.Core = int32(os_runtime.NumCPU())
+	}
+
+	if r.Spec.Values.SlurmdGPU.Resources.Requests.Core == 0 {
+		r.Spec.Values.SlurmdGPU.Resources.Requests.Core = int32(os_runtime.NumCPU())
 	}
 
 	values := map[string]interface{}{
@@ -136,9 +149,10 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"enabled": r.Spec.Values.Mariadb.Enabled,
 			"port":    r.Spec.Values.Mariadb.Port,
 			"auth": map[string]interface{}{
-				"username": r.Spec.Values.Mariadb.Auth.Username,
-				"password": r.Spec.Values.Mariadb.Auth.Password,
-				"database": r.Spec.Values.Mariadb.Auth.DatabaseName,
+				"rootPassword": r.Spec.Values.Mariadb.Auth.RootPassword,
+				"username":     r.Spec.Values.Mariadb.Auth.Username,
+				"password":     r.Spec.Values.Mariadb.Auth.Password,
+				"database":     r.Spec.Values.Mariadb.Auth.DatabaseName,
 			},
 			"primary": map[string]interface{}{
 				"persistence": map[string]interface{}{
@@ -298,21 +312,21 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				},
 			},
 		},
-		"slurmd": map[string]interface{}{
+		"slurmdCPU": map[string]interface{}{
 			"name":         "slurmd",
 			"commonLabels": map[string]string{},
-			"replicaCount": r.Spec.Values.Slurmd.ReplicaCount,
+			"replicaCount": r.Spec.Values.SlurmdCPU.ReplicaCount,
 			"image": map[string]interface{}{
-				"registry":    r.Spec.Values.Slurmd.Image.Registry,
-				"repository":  r.Spec.Values.Slurmd.Image.Repository,
-				"tag":         r.Spec.Values.Slurmd.Image.Tag,
-				"pullPolicy":  r.Spec.Values.Slurmd.Image.PullPolicy,
-				"pullSecrets": r.Spec.Values.Slurmd.Image.PullSecrets,
+				"registry":    r.Spec.Values.SlurmdCPU.Image.Registry,
+				"repository":  r.Spec.Values.SlurmdCPU.Image.Repository,
+				"tag":         r.Spec.Values.SlurmdCPU.Image.Tag,
+				"pullPolicy":  r.Spec.Values.SlurmdCPU.Image.PullPolicy,
+				"pullSecrets": r.Spec.Values.SlurmdCPU.Image.PullSecrets,
 			},
 			"diagnosticMode": map[string]interface{}{
-				"enabled": r.Spec.Values.Slurmd.DiagnosticMode.Enabled,
-				"command": r.Spec.Values.Slurmd.DiagnosticMode.Command,
-				"args":    r.Spec.Values.Slurmd.DiagnosticMode.Args,
+				"enabled": r.Spec.Values.SlurmdCPU.DiagnosticMode.Enabled,
+				"command": r.Spec.Values.SlurmdCPU.DiagnosticMode.Command,
+				"args":    r.Spec.Values.SlurmdCPU.DiagnosticMode.Args,
 			},
 			"automountServiceAccountToken": false,
 			"podLabels":                    map[string]string{},
@@ -353,18 +367,123 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			"lifecycleHooks": map[string]string{},
 			"resources": map[string]interface{}{
 				"requests": map[string]string{
-					"cpu":               r.Spec.Values.Slurmd.Resources.Requests.CPU,
-					"memory":            r.Spec.Values.Slurmd.Resources.Requests.Memory,
-					"ephemeral-storage": r.Spec.Values.Slurmd.Resources.Requests.EphemeralStorage,
+					"cpu":               r.Spec.Values.SlurmdCPU.Resources.Requests.CPU,
+					"memory":            r.Spec.Values.SlurmdCPU.Resources.Requests.Memory,
+					"ephemeral-storage": r.Spec.Values.SlurmdCPU.Resources.Requests.EphemeralStorage,
 				},
 				"limits": map[string]string{
-					"cpu":               r.Spec.Values.Slurmd.Resources.Limits.CPU,
-					"memory":            r.Spec.Values.Slurmd.Resources.Limits.Memory,
-					"ephemeral-storage": r.Spec.Values.Slurmd.Resources.Limits.EphemeralStorage,
+					"cpu":               r.Spec.Values.SlurmdCPU.Resources.Limits.CPU,
+					"memory":            r.Spec.Values.SlurmdCPU.Resources.Limits.Memory,
+					"ephemeral-storage": r.Spec.Values.SlurmdCPU.Resources.Limits.EphemeralStorage,
 				},
 			},
-			"extraVolumes":      r.Spec.Values.Slurmd.ExtraVolumes,
-			"extraVolumeMounts": r.Spec.Values.Slurmd.ExtraVolumeMounts,
+			"extraVolumes":      r.Spec.Values.SlurmdCPU.ExtraVolumes,
+			"extraVolumeMounts": r.Spec.Values.SlurmdCPU.ExtraVolumeMounts,
+			"livenessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"startupProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"readinessProbe": map[string]interface{}{
+				"enabled":             false,
+				"initialDelaySeconds": 30,
+				"timeoutSeconds":      5,
+				"periodSeconds":       10,
+				"successThreshold":    1,
+				"failureThreshold":    6,
+			},
+			"service": map[string]interface{}{
+				"name": "slurmd-headless",
+				"ssh": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       22,
+					"targetPort": 22,
+				},
+				"slurmd": map[string]interface{}{
+					"type":       "ClusterIP",
+					"port":       6818,
+					"targetPort": 6818,
+				},
+			},
+		},
+		"slurmdGPU": map[string]interface{}{
+			"name":         "slurmd",
+			"commonLabels": map[string]string{},
+			"replicaCount": r.Spec.Values.SlurmdGPU.ReplicaCount,
+			"image": map[string]interface{}{
+				"registry":    r.Spec.Values.SlurmdGPU.Image.Registry,
+				"repository":  r.Spec.Values.SlurmdGPU.Image.Repository,
+				"tag":         r.Spec.Values.SlurmdGPU.Image.Tag,
+				"pullPolicy":  r.Spec.Values.SlurmdGPU.Image.PullPolicy,
+				"pullSecrets": r.Spec.Values.SlurmdGPU.Image.PullSecrets,
+			},
+			"diagnosticMode": map[string]interface{}{
+				"enabled": r.Spec.Values.SlurmdGPU.DiagnosticMode.Enabled,
+				"command": r.Spec.Values.SlurmdGPU.DiagnosticMode.Command,
+				"args":    r.Spec.Values.SlurmdGPU.DiagnosticMode.Args,
+			},
+			"automountServiceAccountToken": false,
+			"podLabels":                    map[string]string{},
+			"affinity":                     map[string]string{},
+			"podAnnatations":               map[string]string{},
+			"podAffinityPreset":            "",
+			"podAntiAffinityPreset":        "soft",
+			"nodeAffinityPreset": map[string]interface{}{
+				"type":   "",
+				"key":    "",
+				"values": []string{},
+			},
+			"hostNetwork":               false,
+			"dnsPolicy":                 "",
+			"dnsConfig":                 map[string]string{},
+			"hostIPC":                   false,
+			"priorityClassName":         "",
+			"nodeSelector":              map[string]string{},
+			"tolerations":               []string{},
+			"schedulerName":             "",
+			"topologySpreadConstraints": []string{},
+			"podSecurityContext": map[string]interface{}{
+				"enabled":             true,
+				"fsGroup":             0,
+				"fsGroupChangePolicy": "Always",
+				"supplementalGroups":  []string{},
+			},
+			"terminationGracePeriodSeconds": "",
+			"hostAliases":                   []string{},
+			"extraEnvVars":                  []string{},
+			"extraEnvVarsCM":                "",
+			"extraEnvVarsSecret":            "",
+			"revisionHistoryLimit":          10,
+			"updateStrategy": map[string]interface{}{
+				"type":          "RollingUpdate",
+				"rollingUpdate": map[string]string{},
+			},
+			"lifecycleHooks": map[string]string{},
+			"resources": map[string]interface{}{
+				"requests": map[string]string{
+					"cpu":               r.Spec.Values.SlurmdGPU.Resources.Requests.CPU,
+					"memory":            r.Spec.Values.SlurmdGPU.Resources.Requests.Memory,
+					"ephemeral-storage": r.Spec.Values.SlurmdGPU.Resources.Requests.EphemeralStorage,
+				},
+				"limits": map[string]string{
+					"cpu":               r.Spec.Values.SlurmdGPU.Resources.Limits.CPU,
+					"memory":            r.Spec.Values.SlurmdGPU.Resources.Limits.Memory,
+					"ephemeral-storage": r.Spec.Values.SlurmdGPU.Resources.Limits.EphemeralStorage,
+				},
+			},
+			"extraVolumes":      r.Spec.Values.SlurmdGPU.ExtraVolumes,
+			"extraVolumeMounts": r.Spec.Values.SlurmdGPU.ExtraVolumeMounts,
 			"livenessProbe": map[string]interface{}{
 				"enabled":             false,
 				"initialDelaySeconds": 30,
@@ -623,7 +742,7 @@ ReturnToService=1
 SlurmctldPidFile=/var/run/slurmctld.pid
 SlurmctldPort={{ .Values.slurmctld.service.slurmctld.port }}
 SlurmdPidFile=/var/run/slurmd.pid
-SlurmdPort={{ .Values.slurmd.service.slurmd.port }}
+SlurmdPort=6818
 SlurmdSpoolDir=/var/spool/slurmd
 SlurmUser=slurm
 StateSaveLocation=/var/spool/slurmctld
@@ -646,7 +765,8 @@ SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
-NodeName={{ include "common.names.fullname" . }}-slurmd-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.Slurmd.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.Slurmd.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=1024 Procs=1 State=UNKNOWN
+NodeName={{ include "common.names.fullname" . }}-slurmd-cpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Memory) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Memory) + ` Procs=1 State=UNKNOWN
 PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP`,
 			"slurmdbdConf": `AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2
@@ -749,6 +869,20 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	// build values yaml content for Slurm Chart
 	values := buildChartValues(release)
+
+	// import (
+	// 	"fmt"
+	// 	"gopkg.in/yaml.v3"
+	// )
+	// // // 将 map 转换为 YAML
+	// yamlData, err := yaml.Marshal(values)
+	// if err != nil {
+	// 	panic(fmt.Errorf("YAML marshal error: %w", err))
+	// }
+
+	// // 打印 YAML 输出
+	// fmt.Println("YAML Output:")
+	// fmt.Println(string(yamlData))
 
 	// Check release if exists
 	histClient := action.NewHistory(actionConfig)

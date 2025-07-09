@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM m.lab.zverse.space/docker.io/golang:1.23 AS builder
+FROM m.daocloud.io/docker.io/golang:1.23 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 

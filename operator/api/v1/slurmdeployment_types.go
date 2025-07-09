@@ -118,6 +118,8 @@ type ImageSpec struct {
 	Registry string `json:"registry"`
 	// +kubebuilder:default="data-and-computing"
 	Repository string `json:"repository"`
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Format="string-or-int"
 	// +kubebuilder:default="latest"
 	Tag string `json:"tag"`
 	// +kubebuilder:default="IfNotPresent"
@@ -162,7 +164,20 @@ type SlurmctldSpec struct {
 	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
-type SlurmdSpec struct {
+type SlurmdCPUSpec struct {
+	// +kubebuilder:default="slurmd"
+	Name         string    `json:"name"`
+	CommonLabels []string  `json:"commonLabels,omitempty"`
+	Image        ImageSpec `json:"image"`
+	// +kubebuilder:default=2
+	ReplicaCount      int32                   `json:"replicaCount"`
+	Resources         ResourceSpec            `json:"resources"`
+	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
+	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
+}
+
+type SlurmdGPUSpec struct {
 	// +kubebuilder:default="slurmd"
 	Name         string    `json:"name"`
 	CommonLabels []string  `json:"commonLabels,omitempty"`
@@ -270,7 +285,8 @@ type ValuesSpec struct {
 	ImageMirror ImageMirrorSpec `json:"image,omitempty"`
 	Munged      MungedSpec      `json:"munged"`
 	Slurmctld   SlurmctldSpec   `json:"slurmctld"`
-	Slurmd      SlurmdSpec      `json:"slurmd"`
+	SlurmdCPU   SlurmdCPUSpec   `json:"slurmdCPU"`
+	SlurmdGPU   SlurmdGPUSpec   `json:"slurmdGPU"`
 	Slurmdbd    SlurmdbdSpec    `json:"slurmdbd"`
 	SlurmLogin  SlurmLogindSpec `json:"login"`
 	// +kubebuilder:default="nano"
@@ -319,7 +335,8 @@ func (v *ValuesSpec) UnmarshalJSON(data []byte) error {
 		ImageMirror       ImageMirrorSpec    `json:"image,omitempty"`
 		Munged            MungedSpec         `json:"munged"`
 		Slurmctld         SlurmctldSpec      `json:"slurmctld"`
-		Slurmd            SlurmdSpec         `json:"slurmd"`
+		SlurmdCPU         SlurmdCPUSpec      `json:"slurmdCPU"`
+		SlurmdGPU         SlurmdGPUSpec      `json:"slurmdGPU"`
 		Slurmdbd          SlurmdbdSpec       `json:"slurmdbd"`
 		SlurmLogin        SlurmLogindSpec    `json:"login"`
 		ResourcesPreset   string             `json:"resourcesPreset,omitempty"`
@@ -339,7 +356,8 @@ func (v *ValuesSpec) UnmarshalJSON(data []byte) error {
 	v.ImageMirror = aux.ImageMirror
 	v.Munged = aux.Munged
 	v.Slurmctld = aux.Slurmctld
-	v.Slurmd = aux.Slurmd
+	v.SlurmdCPU = aux.SlurmdCPU
+	v.SlurmdGPU = aux.SlurmdGPU
 	v.Slurmdbd = aux.Slurmdbd
 	v.SlurmLogin = aux.SlurmLogin
 	v.ResourcesPreset = aux.ResourcesPreset

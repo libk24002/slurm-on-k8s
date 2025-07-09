@@ -1,4 +1,4 @@
-ARG OS_BASE_IMAGE=docker.io/library/debian:bookworm
+ARG OS_BASE_IMAGE=m.daocloud.io/docker.io/library/debian:bookworm
 
 FROM ${OS_BASE_IMAGE}
 ARG SLURM_BINARY_BASE_URL=https://download.schedmd.com/slurm

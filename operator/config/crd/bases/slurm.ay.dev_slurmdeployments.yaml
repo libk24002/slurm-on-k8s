@@ -211,6 +211,7 @@ spec:
                             type: string
                           tag:
                             default: latest
+                            format: string-or-int
                             type: string
                         required:
                         - pullPolicy
@@ -281,6 +282,9 @@ spec:
                             type: string
                           password:
                             default: password-for-slurm
+                            type: string
+                          rootPassword:
+                            default: rootpassword-for-slurm
                             type: string
                           username:
                             default: slurm
@@ -379,6 +383,7 @@ spec:
                             type: string
                           tag:
                             default: latest
+                            format: string-or-int
                             type: string
                         required:
                         - pullPolicy
@@ -530,6 +535,7 @@ spec:
                             type: string
                           tag:
                             default: latest
+                            format: string-or-int
                             type: string
                         required:
                         - pullPolicy
@@ -595,7 +601,7 @@ spec:
                     - name
                     - replicaCount
                     type: object
-                  slurmd:
+                  slurmdCPU:
                     properties:
                       commonLabels:
                         items:
@@ -656,6 +662,135 @@ spec:
                             type: string
                           tag:
                             default: latest
+                            format: string-or-int
+                            type: string
+                        required:
+                        - pullPolicy
+                        - pullSecrets
+                        - registry
+                        - repository
+                        - tag
+                        type: object
+                      name:
+                        default: slurmd
+                        type: string
+                      replicaCount:
+                        default: 2
+                        format: int32
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
+                              cpu:
+                                default: 3000m
+                                type: string
+                              ephemeral-storage:
+                                default: 8Gi
+                                type: string
+                              memory:
+                                default: 2Gi
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                          requests:
+                            properties:
+                              core:
+                                default: 1
+                                format: int32
+                                type: integer
+                              cpu:
+                                default: 500m
+                                type: string
+                              ephemeral-storage:
+                                default: 2Gi
+                                type: string
+                              memory:
+                                default: 1Gi
+                                type: string
+                            required:
+                            - cpu
+                            - ephemeral-storage
+                            - memory
+                            type: object
+                        required:
+                        - requests
+                        type: object
+                    required:
+                    - image
+                    - name
+                    - replicaCount
+                    - resources
+                    type: object
+                  slurmdGPU:
+                    properties:
+                      commonLabels:
+                        items:
+                          type: string
+                        type: array
+                      diagnosticMode:
+                        properties:
+                          args:
+                            items:
+                              type: string
+                            type: array
+                          command:
+                            items:
+                              type: string
+                            type: array
+                          enabled:
+                            default: false
+                            type: boolean
+                        required:
+                        - args
+                        - command
+                        - enabled
+                        type: object
+                      extraVolumeMounts:
+                        items:
+                          properties:
+                            mountPath:
+                              default: ""
+                              type: string
+                            name:
+                              default: ""
+                              type: string
+                          required:
+                          - mountPath
+                          - name
+                          type: object
+                        type: array
+                      extraVolumes:
+                        items:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        type: array
+                      image:
+                        properties:
+                          pullPolicy:
+                            default: IfNotPresent
+                            type: string
+                          pullSecrets:
+                            items:
+                              type: string
+                            type: array
+                          registry:
+                            default: localhost
+                            type: string
+                          repository:
+                            default: data-and-computing
+                            type: string
+                          tag:
+                            default: latest
+                            format: string-or-int
                             type: string
                         required:
                         - pullPolicy
@@ -783,6 +918,7 @@ spec:
                             type: string
                           tag:
                             default: latest
+                            format: string-or-int
                             type: string
                         required:
                         - pullPolicy
@@ -803,7 +939,8 @@ spec:
                 - mariadb
                 - munged
                 - slurmctld
-                - slurmd
+                - slurmdCPU
+                - slurmdGPU
                 - slurmdbd
                 type: object
             required:

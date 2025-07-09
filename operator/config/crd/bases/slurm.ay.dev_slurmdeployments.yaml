@@ -170,8 +170,6 @@ spec:
                             default: false
                             type: boolean
                         required:
-                        - args
-                        - command
                         - enabled
                         type: object
                       extraVolumeMounts:
@@ -342,8 +340,6 @@ spec:
                             default: false
                             type: boolean
                         required:
-                        - args
-                        - command
                         - enabled
                         type: object
                       extraVolumeMounts:
@@ -468,7 +464,6 @@ spec:
                         - name
                         type: object
                     required:
-                    - annotations
                     - automount
                     - name
                     - role
@@ -494,8 +489,6 @@ spec:
                             default: false
                             type: boolean
                         required:
-                        - args
-                        - command
                         - enabled
                         type: object
                       extraVolumeMounts:
@@ -621,8 +614,6 @@ spec:
                             default: false
                             type: boolean
                         required:
-                        - args
-                        - command
                         - enabled
                         type: object
                       extraVolumeMounts:
@@ -749,8 +740,6 @@ spec:
                             default: false
                             type: boolean
                         required:
-                        - args
-                        - command
                         - enabled
                         type: object
                       extraVolumeMounts:
@@ -877,8 +866,6 @@ spec:
                             default: false
                             type: boolean
                         required:
-                        - args
-                        - command
                         - enabled
                         type: object
                       extraVolumeMounts:

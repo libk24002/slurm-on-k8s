@@ -667,6 +667,9 @@ StorageLoc={{ .Values.mariadb.auth.database }}`,
 	return values
 }
 
+// SlurmDeploymentFinalizer is the name of the finalizer added to SlurmDeployment resources
+const SlurmDeploymentFinalizer = "slurm.ay.dev/finalizer"
+
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.20.0/pkg/reconcile
 func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -676,6 +679,50 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 	log.Printf("Find SlurmDeployment %s", release.Name)
+
+	// Initialize Helm settings and configuration
+	settings := cli.New()
+	actionConfig := new(action.Configuration)
+	if err := actionConfig.Init(settings.RESTClientGetter(), release.Spec.Chart.Namespace, "secret", log.Printf); err != nil {
+		log.Printf("Failed to initialize Helm configuration: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	// Check if the SlurmDeployment is being deleted
+	if !release.ObjectMeta.DeletionTimestamp.IsZero() {
+		// The object is being deleted
+		if containsString(release.ObjectMeta.Finalizers, SlurmDeploymentFinalizer) {
+			// Our finalizer is present, so we need to clean up resources
+			log.Printf("Deleting Helm release %s in namespace %s", release.Name, release.Spec.Chart.Namespace)
+
+			// Uninstall the Helm release
+			uninstallClient := action.NewUninstall(actionConfig)
+			_, err := uninstallClient.Run(release.Name)
+			if err != nil {
+				log.Printf("Failed to uninstall Helm release %s: %v", release.Name, err)
+				return ctrl.Result{}, err
+			}
+
+			// Remove our finalizer from the list and update it
+			release.ObjectMeta.Finalizers = removeString(release.ObjectMeta.Finalizers, SlurmDeploymentFinalizer)
+			if err := r.Update(ctx, release); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
+
+	// Add finalizer if it doesn't exist
+	if !containsString(release.ObjectMeta.Finalizers, SlurmDeploymentFinalizer) {
+		log.Printf("Adding finalizer to SlurmDeployment %s", release.Name)
+		release.ObjectMeta.Finalizers = append(release.ObjectMeta.Finalizers, SlurmDeploymentFinalizer)
+		if err := r.Update(ctx, release); err != nil {
+			return ctrl.Result{}, err
+		}
+		// Requeue to continue with installation after finalizer is added
+		return ctrl.Result{Requeue: true}, nil
+	}
 
 	// Check if namespace exists, if not, create it
 	namespace := release.Spec.Chart.Namespace
@@ -698,14 +745,6 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			log.Printf("Failed to get namespace %s: %v", namespace, err)
 			return ctrl.Result{}, err
 		}
-	}
-
-	// init Slurm Helm Chart settings
-	settings := cli.New()
-	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(settings.RESTClientGetter(), release.Spec.Chart.Namespace, "secret", log.Printf); err != nil {
-		log.Printf("Failed to initialize Helm configuration: %v", err)
-		return ctrl.Result{}, err
 	}
 
 	// build values yaml content for Slurm Chart
@@ -911,6 +950,26 @@ func extractTarGz(filePath, destPath string) error {
 }
 
 // SetupWithManager sets up the controller with the Manager.
+// Helper functions to check and remove string from a slice of strings.
+func containsString(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+func removeString(slice []string, s string) []string {
+	result := make([]string, 0, len(slice))
+	for _, item := range slice {
+		if item != s {
+			result = append(result, item)
+		}
+	}
+	return result
+}
+
 func (r *SlurmDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&slurmv1.SlurmDeployment{}).

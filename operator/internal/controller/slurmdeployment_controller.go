@@ -175,7 +175,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 
 	if r.Spec.Values.SlurmdCPU.Resources.Limits == nil {
 		r.Spec.Values.SlurmdCPU.Resources.Limits = &slurmv1.ResourceLimitSpec{
-			CPU:              "8000m",
+			CPU:              "2000m",
 			Memory:           "8Gi",
 			EphemeralStorage: "20Gi",
 		}
@@ -183,7 +183,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 
 	if r.Spec.Values.SlurmdGPU.Resources.Limits == nil {
 		r.Spec.Values.SlurmdGPU.Resources.Limits = &slurmv1.ResourceLimitSpec{
-			CPU:              "8000m",
+			CPU:              "2000m",
 			Memory:           "8Gi",
 			EphemeralStorage: "20Gi",
 		}
@@ -191,7 +191,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 
 	if r.Spec.Values.SlurmLogin.Resources.Limits == nil {
 		r.Spec.Values.SlurmLogin.Resources.Limits = &slurmv1.ResourceLimitSpec{
-			CPU:              "8000m",
+			CPU:              "2000m",
 			Memory:           "8Gi",
 			EphemeralStorage: "20Gi",
 		}
@@ -474,7 +474,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"failureThreshold":    6,
 			},
 			"service": map[string]interface{}{
-				"name": "slurmd-headless",
+				"name": "slurmd-cpu-headless",
 				"ssh": map[string]interface{}{
 					"type":       "ClusterIP",
 					"port":       22,
@@ -579,7 +579,7 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 				"failureThreshold":    6,
 			},
 			"service": map[string]interface{}{
-				"name": "slurmd-headless",
+				"name": "slurmd-gpu-headless",
 				"ssh": map[string]interface{}{
 					"type":       "ClusterIP",
 					"port":       22,

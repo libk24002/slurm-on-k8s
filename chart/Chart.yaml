@@ -1,9 +1,9 @@
 annotations:
-  category: Infrastructure
+  category: App
 apiVersion: v2
 appVersion: 25.05.0
 name: slurm
-description: A Helm chart for Slurm Cluster
+description: A Helm chart for Slurm On Kubernetes
 version: 1.0.7
 home: https://github.com/AaronYang0628/slurm-on-k8s/tree/main/chart
 icon: https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Slurm_logo.svg/262px-Slurm_logo.svg.png

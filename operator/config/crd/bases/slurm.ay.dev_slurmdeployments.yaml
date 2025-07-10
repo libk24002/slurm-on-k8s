@@ -13,7 +13,7 @@ spec:
     plural: slurmdeployments
     shortNames:
     - sd
-    - slurm
+    - slurmdep
     singular: slurmdeployment
   scope: Namespaced
   versions:

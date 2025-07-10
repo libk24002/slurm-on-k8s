@@ -16,7 +16,8 @@ Slurm on Kubernetes provides the following features:
 - **Multi-User Support**: Allows multiple users to submit and manage their jobs concurrently.
 - **Integration with MPI Libraries**: Supports both Open MPI and Intel MPI libraries for parallel computing.
 - **Customizable**: Using `values.yaml` file, you can customizable a slurm cluster, fitting specific needs and configurations.
-- **munged**
+- **Separated munged daemon**
+- **Support GPU nodes deployment**
 
 ### Usage
 
@@ -30,7 +31,7 @@ Slurm on Kubernetes provides the following features:
     2. `helm install slurm ay-helm-mirror/chart --version 1.0.6`
 - for opertaor user
     > pull an image and apply
-    1. `docker pull ghcr.io/aaronyang0628/slurm-operator:25.05`
+    1. `podman pull ghcr.io/aaronyang0628/slurm-operator:25.05`
     2. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/operator_install.yaml`
     3. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.values.yaml`
 

@@ -11,6 +11,9 @@ spec:
     kind: SlurmDeployment
     listKind: SlurmDeploymentList
     plural: slurmdeployments
+    shortNames:
+    - sd
+    - slurm
     singular: slurmdeployment
   scope: Namespaced
   versions:

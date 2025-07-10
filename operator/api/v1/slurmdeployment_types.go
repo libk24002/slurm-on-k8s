@@ -317,7 +317,7 @@ type SlurmDeploymentStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:shortName=sd;slurm
+// +kubebuilder:resource:shortName=sd;slurmdep
 
 // SlurmDeployment is the Schema for the slurmdeployments API.
 type SlurmDeployment struct {

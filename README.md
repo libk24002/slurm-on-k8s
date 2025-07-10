@@ -15,7 +15,7 @@ Slurm on Kubernetes provides the following features:
 - **High Availability**: Supports high availability configurations to ensure continuous operation.
 - **Multi-User Support**: Allows multiple users to submit and manage their jobs concurrently.
 - **Integration with MPI Libraries**: Supports both Open MPI and Intel MPI libraries for parallel computing.
-- **Customizable**: Using `values.yaml` file, you can customizable a slurm cluster, fitting specific needs and configurations.
+- **Customizable**: Using [values.yaml](https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurm.values.yaml) file, you can customizable a slurm cluster, fitting specific needs and configurations.
 - **Separated munged daemon**
 - **Support GPU nodes deployment**
 
@@ -24,15 +24,58 @@ Slurm on Kubernetes provides the following features:
 > if you wanna change slurm configuration ,please check slurm configuration generator, check [link](https://slurm.schedmd.com/configurator.html)
 
 - for github helm user
-    1. `helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts`
-    2. `helm install slurm ay-helm-mirror/chart --version 1.0.6`
+    1. get helm repo and update
+        ```
+        helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts
+        ```
+    2. install slurm chart
+        ```
+        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.7
+        ```
 - for artifact helm user
-    1. `helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts`
-    2. `helm install slurm ay-helm-mirror/chart --version 1.0.6`
+    1.  get helm repo and update
+        ```
+        helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts
+        ```
+    2. install slurm chart
+        ```shell
+        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.7
+        ```
+    Or you can get template values.yaml from [link](https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurm.values.yaml)
 - for opertaor user
-    > pull an image and apply
-    1. `podman pull ghcr.io/aaronyang0628/slurm-operator:25.05`
-    2. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/operator_install.yaml`
-    3. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.values.yaml`
+    1. test pull an image and apply
+        ```
+        podman pull ghcr.io/aaronyang0628/slurm-operator:25.05
+        ```
+    2. deploy slurm operator
+        ```
+        kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/operator_install.yaml
+        ```
+    3. apply CRD slurmdeployment 
+        ```
+        kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.values.yaml
+        ```
 
+### Manage Your Slurm Cluster
+- check cluster status
+    ```shell
+    kubectl get slurmdep slurmdeployment-sample
+    kubectl -n slurm get pods -w
+    ```
 
+When everything is ready, you can login your cluster and submit jobs.
+- Add PubKeys to login node
+    ```markdown
+    you can edit `auth.ssh.configmap.perfabPubKeys` the file chart/values.yaml to add your public keys
+    Or you can edit `spec.values.auth.ssh.configmap.perfabPubKeys` in your slurmdeployment CRD
+    ```
+
+- reapply your chart or CRD
+- login your cluster
+    ```shell
+    kubectl -n slurm exec -it deploy/slurm-login -c login -- bin/bash
+    ```
+    Or
+    ```shell
+    ssh root@slurm-login.svc.cluster.local
+    ```

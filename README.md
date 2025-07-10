@@ -36,34 +36,3 @@ Slurm on Kubernetes provides the following features:
     3. `kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.values.yaml`
 
 
-
-- for image developer
-    > you might need to build your own images or chart
-    1. build images
-        ```shell
-        MPI_TYPE=open-mpi #intel-mpi
-        bash ./container/builder/build.sh
-        bash ./container/base/build.sh
-        bash ./container/munged/build.sh
-        bash ./container/login/build.sh
-        bash ./container/slurmctld/build.sh
-        bash ./container/slurmd/build.sh
-        bash ./container/slurmdbd/build.sh
-        ```
-    2. load images to minikube for test
-        ```shell
-        MPI_TYPE=open-mpi #intel-mpi
-        bash ./container/load-into-minikube.sh
-        ```
-    3. publish helm chart
-        ```shell
-        helm package --dependency-update --destination /tmp/ ./chart
-        ```
-    4. test your helm chart
-        ```shell
-        helm install -f ./chart/values.yaml slurm /tmp/slurm-1.0.X.tgz
-        ```
-    5. index your chart
-        ```shell
-        helm repo index ./chart/ && cp -f ./chart/index.yaml ./index.yaml
-        ```

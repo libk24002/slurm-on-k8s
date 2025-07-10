@@ -9,7 +9,7 @@ podman push docker.io/aaronyang0628/slurm-operator:latest
 
 ### push to github registry
 ```shell
-export GITHUB_CR_PAT=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
+export GITHUB_CR_PAT=ghp_xxxxxxxxxxxx
 echo $GITHUB_CR_PAT | podman login ghcr.io -u aaronyang0628 --password-stdin
 podman push ghcr.io/aaronyang0628/slurm-operator:latest
 ```

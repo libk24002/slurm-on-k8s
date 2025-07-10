@@ -889,8 +889,13 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			uninstallClient := action.NewUninstall(actionConfig)
 			_, err := uninstallClient.Run(release.Name)
 			if err != nil {
-				log.Printf("Failed to uninstall Helm release %s: %v", release.Name, err)
-				return ctrl.Result{}, err
+				// 如果错误是因为release不存在，我们可以忽略这个错误
+				if strings.Contains(err.Error(), "release: not found") {
+					log.Printf("Helm release %s not found, skipping uninstall", release.Name)
+				} else {
+					log.Printf("Failed to uninstall Helm release %s: %v", release.Name, err)
+					return ctrl.Result{}, err
+				}
 			}
 
 			// Remove our finalizer from the list and update it

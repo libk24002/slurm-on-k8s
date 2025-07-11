@@ -86,7 +86,7 @@ spec:
           {{- if and .Values.image.mirror.registry (ne .Values.image.mirror.registry "") }}
           image: {{ .Values.image.mirror.registry }}/docker.io/library/busybox:1.37.0-glibc
           {{- else }}
-          image: docker.io/library/busybox:1.37.0-glibc
+          image: m.daocloud.io/docker.io/library/busybox:1.37.0-glibc
           {{- end }}
           command: ["sh", "-c", "chmod 755 /run/munge && chown 1108:1108 /run/munge"]
           volumeMounts:

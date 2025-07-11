@@ -18,7 +18,7 @@ spec:
         {{- if and .Values.image.mirror.registry (ne .Values.image.mirror.registry "") }}
         image: {{ .Values.image.mirror.registry }}/docker.io/library/debian:latest
         {{- else }}
-        image: docker.io/library/debian:latest
+        image: m.daocloud.io/docker.io/library/debian:latest
         {{- end }}
         command: ["/bin/sh", "-c"]
         args:
@@ -37,7 +37,7 @@ spec:
         {{- if and .Values.image.mirror.registry (ne .Values.image.mirror.registry "") }}
         image: {{ .Values.image.mirror.registry }}/docker.io/library/debian:latest
         {{- else }}
-        image: docker.io/library/debian:latest
+        image: m.daocloud.io/docker.io/library/debian:latest
         {{- end }}
         command: ["/bin/sh", "-c"]
         args:

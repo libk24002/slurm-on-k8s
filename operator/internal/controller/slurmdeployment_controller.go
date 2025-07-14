@@ -898,11 +898,17 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 			// Uninstall the Helm release
 			uninstallClient := action.NewUninstall(actionConfig)
+			uninstallClient.DisableHooks = true        // 禁用钩子，避免cleanup job失败阻塞卸载过程
+			uninstallClient.Timeout = 60 * time.Second // 设置较短的超时时间
+			uninstallClient.Wait = false               // 不等待资源完全删除
 			_, err := uninstallClient.Run(release.Name)
 			if err != nil {
 				// 如果错误是因为release不存在，我们可以忽略这个错误
 				if strings.Contains(err.Error(), "release: not found") {
 					log.Printf("Helm release %s not found, skipping uninstall", release.Name)
+				} else if strings.Contains(err.Error(), "timed out") || strings.Contains(err.Error(), "BackoffLimitExceeded") {
+					// 忽略超时错误和BackoffLimitExceeded错误，继续删除CR
+					log.Printf("Helm release %s uninstall timed out or job failed, continuing with CR deletion: %v", release.Name, err)
 				} else {
 					log.Printf("Failed to uninstall Helm release %s: %v", release.Name, err)
 					return ctrl.Result{}, err

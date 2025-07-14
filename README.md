@@ -53,7 +53,7 @@ Slurm on Kubernetes provides the following features:
         ```
     3. apply CRD slurmdeployment 
         ```
-        kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.values.yaml
+        kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurmdeployment.zj.values.yaml
         ```
 
 ### Manage Your Slurm Cluster

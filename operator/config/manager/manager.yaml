@@ -62,6 +62,9 @@ spec:
         - /manager
         args:
           - --leader-elect
+          - --leader-elect-lease-duration=60s
+          - --leader-elect-renew-deadline=40s
+          - --leader-elect-retry-period=10s
           - --health-probe-bind-address=:8081
         image: controller:latest
         name: manager

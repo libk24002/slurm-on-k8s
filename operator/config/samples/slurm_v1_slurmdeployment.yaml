@@ -40,7 +40,7 @@ spec:
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-munged
-        tag: "intelmpi-250208-r0"
+        tag: "25.05"
         pullPolicy: IfNotPresent
         pullSecrets: []
       extraVolumes: []
@@ -49,7 +49,7 @@ spec:
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmdbd
-        tag: intelmpi-250208-r0
+        tag: "25.05"
         pullPolicy: IfNotPresent
         pullSecrets: []
       extraVolumes: []
@@ -58,7 +58,7 @@ spec:
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmctld
-        tag: intelmpi-250208-r0
+        tag: "25.05"
         pullPolicy: IfNotPresent
         pullSecrets: []
       extraVolumes: []
@@ -67,7 +67,7 @@ spec:
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-login
-        tag: intelmpi-250208-r0-lensing-v4
+        tag: 25.05-open-mpi
         pullPolicy: IfNotPresent
         pullSecrets: []
       resources: 
@@ -86,7 +86,7 @@ spec:
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmd
-        tag: intelmpi-250208-r0-lensing-v5.3
+        tag: 25.05-open-mpi
         pullPolicy: IfNotPresent
         pullSecrets: []
       resources: 
@@ -102,7 +102,7 @@ spec:
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmd
-        tag: intelmpi-250208-r0-lensing-v5.3
+        tag: 25.05-open-mpi
         pullPolicy: IfNotPresent
         pullSecrets: []
       resources: 

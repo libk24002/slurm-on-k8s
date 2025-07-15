@@ -204,6 +204,42 @@ spec:
             {{- if .Values.login.extraVolumeMounts }}
             {{- include "common.tplvalues.render" ( dict "value" .Values.login.extraVolumeMounts "context" $) | nindent 12 }}
             {{- end }}
+        {{- if .Values.login.submitJobMode.enabled }}
+        - name: job
+          {{- if and .Values.image.mirror.registry (ne .Values.image.mirror.registry "") }}
+          image: {{ .Values.image.mirror.registry }}/{{ .Values.login.submitJobMode.image.registry }}/{{ .Values.login.submitJobMode.image.repository }}:{{ .Values.login.submitJobMode.image.tag }}
+          {{- else }}
+          image: {{ .Values.login.submitJobMode.image.registry }}/{{ .Values.login.submitJobMode.image.repository }}:{{ .Values.login.submitJobMode.image.tag }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.login.submitJobMode.image.pullPolicy }}
+          command: {{ .Values.login.submitJobMode.command | toJson }}
+          args: {{ .Values.login.submitJobMode.args | toJson }}
+          env:
+            {{- if .Values.login.extraEnvVars }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.login.extraEnvVars "context" $) | nindent 12 }}
+            {{- end }}
+          envFrom:
+            {{- if .Values.login.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.login.extraEnvVarsCM "context" $) }}
+            {{- end }}
+            {{- if .Values.login.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.login.extraEnvVarsSecret "context" $) }}
+            {{- end }}
+          {{- if .Values.login.containerSecurityContext }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.login.containerSecurityContext "context" $) | nindent 12 }}
+          {{- else }}
+          securityContext:
+            privileged: true
+          {{- end }}
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /data
+            {{- if .Values.login.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" ( dict "value" .Values.login.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- end }}
+        {{- end }}
       volumes:
         - name: ssh-private-key
           secret:

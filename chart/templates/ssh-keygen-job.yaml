@@ -35,7 +35,7 @@ spec:
       containers:
       - name: create-secret
         {{- if and .Values.image.mirror.registry (ne .Values.image.mirror.registry "") }}
-        image: {{ .Values.image.mirror.registry }}/docker.io/library/debian:latest
+        image: {{ .Values.image.mirror.registry }}/docker.io/bitnami/kubectl:1.28-debian-11
         {{- else }}
         image: m.daocloud.io/docker.io/bitnami/kubectl:1.28-debian-11
         {{- end }}

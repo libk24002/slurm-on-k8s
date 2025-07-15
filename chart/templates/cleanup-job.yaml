@@ -8,7 +8,7 @@ metadata:
     "helm.sh/hook-delete-policy": hook-succeeded,hook-failed
 spec:
   ttlSecondsAfterFinished: 1800
-  backoffLimit: 3
+  backoffLimit: 10
   template:
     spec:
       serviceAccountName: {{ include "slurm.serviceAccountName" . }}
@@ -27,5 +27,5 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            kubectl -n {{ .Release.Namespace }} delete secret {{ .Values.auth.ssh.secret.name }}
-            kubectl -n {{ .Release.Namespace }} delete configmap {{ .Values.auth.ssh.configmap.name }}
+            kubectl -n {{ .Release.Namespace }} delete secret {{ .Values.auth.ssh.secret.name }} --ignore-not-found=true
+            kubectl -n {{ .Release.Namespace }} delete configmap {{ .Values.auth.ssh.configmap.name }} --ignore-not-found=true

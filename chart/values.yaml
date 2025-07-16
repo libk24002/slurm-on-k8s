@@ -40,7 +40,7 @@ munged:
   commonLabels: {}
   image:
     registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-slurmd
+    repository: data-and-computing/slurm-munged
     tag: "25.05"
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -427,16 +427,6 @@ login:
   hostAliases: []
   command: []
   args: []
-  submitJobMode:
-    enabled: false
-    image:
-      registry: docker.io
-      repository: busybox
-      tag: 1.37.0-glibc
-      pullPolicy: IfNotPresent
-      pullSecrets: []
-    command: ["srun", "-N2", "/bin/hostanme"]
-    args: []
   diagnosticMode:
     enabled: false
     command: ["tail", "-f", "/etc/hosts"]

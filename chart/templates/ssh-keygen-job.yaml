@@ -50,8 +50,12 @@ spec:
               --from-file=id_rsa.pub=/keys/id_rsa.pub \
               --from-file=authorized_keys=/keys/id_rsa.pub
             fi
-            kubectl -n {{ .Release.Namespace }} create configmap {{ .Values.auth.ssh.configmap.name }} \
-              --from-file=authorized_keys=/keys/authorized_keys
+            if kubectl -n {{ .Release.Namespace }} get configmap {{ .Values.auth.ssh.configmap.name }}; then
+              echo "SSH preset pub configmap already exist. Skipping configmap creation.";
+            else
+              kubectl -n {{ .Release.Namespace }} create configmap {{ .Values.auth.ssh.configmap.name }} \
+                --from-file=authorized_keys=/keys/authorized_keys
+            fi
         volumeMounts:
         - name: keys
           mountPath: /keys

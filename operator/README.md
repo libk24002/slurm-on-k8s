@@ -36,7 +36,8 @@ make install
 You can apply the samples (examples) from the config/sample:
 
 ```sh
-kubectl apply -k config/samples/
+kubectl apply -f config/samples/slurm_v1_slurmdeployment.simple.yaml
+kubectl apply -f config/samples/slurm_v1_slurmdeployment.yaml
 ```
 
 >**NOTE**: Ensure that the samples has default values to test it out.

@@ -9,7 +9,7 @@ spec:
   chart:
     name: slurm
     repository: https://aaronyang0628.github.io/helm-chart-mirror/charts/slurm
-    version: 1.0.7
+    version: 1.0.8
     namespace: slurm
   values:
     mariadb:
@@ -52,6 +52,12 @@ spec:
         tag: "25.05"
         pullPolicy: IfNotPresent
         pullSecrets: []
+      nodeSelector: {}
+      nodeAffinityPreset:
+        type: ""
+        key: ""
+        values: []
+        weight: 0
       extraVolumes: []
       extraVolumeMounts: []
     slurmctld:
@@ -61,6 +67,12 @@ spec:
         tag: "25.05"
         pullPolicy: IfNotPresent
         pullSecrets: []
+      nodeSelector: {}
+      nodeAffinityPreset:
+        type: ""
+        key: ""
+        values: []
+        weight: 0
       extraVolumes: []
       extraVolumeMounts: []
     login:
@@ -79,6 +91,12 @@ spec:
           cpu: 500m
           ephemeral-storage: 8Gi
           memory: 1Gi
+      nodeSelector: {}
+      nodeAffinityPreset:
+        type: ""
+        key: ""
+        values: []
+        weight: 0
       extraVolumes: []
       extraVolumeMounts: []
     slurmdCPU:
@@ -95,6 +113,12 @@ spec:
           cpu: 500m
           ephemeral-storage: 10Gi
           memory: 1Gi
+      nodeSelector: {}
+      nodeAffinityPreset:
+        type: ""
+        key: ""
+        values: []
+        weight: 0
       extraVolumes: []
       extraVolumeMounts: []
     slurmdGPU:
@@ -111,6 +135,12 @@ spec:
           cpu: 500m
           ephemeral-storage: 10Gi
           memory: 1Gi
+      nodeSelector: {}
+      nodeAffinityPreset:
+        type: ""
+        key: ""
+        values: []
+        weight: 0
       extraVolumes: []
       extraVolumeMounts: []
 

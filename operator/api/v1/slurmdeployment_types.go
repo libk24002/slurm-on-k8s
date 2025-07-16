@@ -95,6 +95,13 @@ type AuthSSHConfigmapSpec struct {
 	PrefabPubKeys []string `json:"prefabPubKeys"`
 }
 
+type NodeAffinityPreset struct {
+	Type   string   `json:"type,omitempty"`
+	Key    string   `json:"key,omitempty"`
+	Values []string `json:"values,omitempty"`
+	Weight int32    `json:"weight,omitempty"`
+}
+
 type PersistenceSpec struct {
 	Shared PersistenceSharedSpec `json:"shared"`
 }
@@ -123,8 +130,8 @@ type ImageSpec struct {
 	// +kubebuilder:default="latest"
 	Tag string `json:"tag"`
 	// +kubebuilder:default="IfNotPresent"
-	PullPolicy  string   `json:"pullPolicy"`
-	PullSecrets []string `json:"pullSecrets"`
+	PullPolicy  string   `json:"pullPolicy,omitempty"`
+	PullSecrets []string `json:"pullSecrets,omitempty"`
 }
 
 type DiagnosticModeSpec struct {
@@ -157,11 +164,13 @@ type SlurmctldSpec struct {
 	CommonLabels map[string]string `json:"commonLabels,omitempty"`
 	Image        ImageSpec         `json:"image"`
 	// +kubebuilder:default=1
-	ReplicaCount      int32                   `json:"replicaCount"`
-	Resources         *ResourceSpec           `json:"resources,omitempty"`
-	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
-	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
+	ReplicaCount       int32                   `json:"replicaCount"`
+	Resources          *ResourceSpec           `json:"resources,omitempty"`
+	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
+	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
+	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
+	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
 type SlurmdCPUSpec struct {
@@ -169,12 +178,14 @@ type SlurmdCPUSpec struct {
 	Name         string    `json:"name"`
 	CommonLabels []string  `json:"commonLabels,omitempty"`
 	Image        ImageSpec `json:"image"`
-	// +kubebuilder:default=2
-	ReplicaCount      int32                   `json:"replicaCount"`
-	Resources         ResourceSpec            `json:"resources"`
-	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
-	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
+	// +kubebuilder:default=0
+	ReplicaCount       int32                   `json:"replicaCount"`
+	Resources          ResourceSpec            `json:"resources,omitempty"`
+	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
+	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
+	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
+	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
 type SlurmdGPUSpec struct {
@@ -182,16 +193,18 @@ type SlurmdGPUSpec struct {
 	Name         string    `json:"name"`
 	CommonLabels []string  `json:"commonLabels,omitempty"`
 	Image        ImageSpec `json:"image"`
-	// +kubebuilder:default=2
-	ReplicaCount      int32                   `json:"replicaCount"`
-	Resources         ResourceSpec            `json:"resources"`
-	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
-	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
+	// +kubebuilder:default=0
+	ReplicaCount       int32                   `json:"replicaCount"`
+	Resources          ResourceSpec            `json:"resources,omitempty"`
+	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
+	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
+	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
+	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
 type ResourceSpec struct {
-	Requests *ResourceRequestSpec `json:"requests"`
+	Requests *ResourceRequestSpec `json:"requests,omitempty"`
 	Limits   *ResourceLimitSpec   `json:"limits,omitempty"`
 }
 
@@ -219,23 +232,27 @@ type ResourceLimitSpec struct {
 
 type SlurmdbdSpec struct {
 	// +kubebuilder:default="slurmdbd"
-	Name              string                  `json:"name"`
-	CommonLabels      map[string]string       `json:"commonLabels,omitempty"`
-	Image             ImageSpec               `json:"image"`
-	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
-	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
+	Name               string                  `json:"name"`
+	CommonLabels       map[string]string       `json:"commonLabels,omitempty"`
+	Image              ImageSpec               `json:"image"`
+	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
+	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
+	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
+	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
 type SlurmLogindSpec struct {
 	// +kubebuilder:default="login"
-	Name              string                  `json:"name"`
-	CommonLabels      map[string]string       `json:"commonLabels,omitempty"`
-	Image             ImageSpec               `json:"image"`
-	Resources         ResourceSpec            `json:"resources"`
-	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
-	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
+	Name               string                  `json:"name"`
+	CommonLabels       map[string]string       `json:"commonLabels,omitempty"`
+	Image              ImageSpec               `json:"image"`
+	Resources          ResourceSpec            `json:"resources,omitempty"`
+	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
+	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
+	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
+	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
 type ServiceAccountSpec struct {
@@ -285,8 +302,8 @@ type ValuesSpec struct {
 	ImageMirror ImageMirrorSpec `json:"image,omitempty"`
 	Munged      MungedSpec      `json:"munged"`
 	Slurmctld   SlurmctldSpec   `json:"slurmctld"`
-	SlurmdCPU   SlurmdCPUSpec   `json:"slurmdCPU"`
-	SlurmdGPU   SlurmdGPUSpec   `json:"slurmdGPU"`
+	SlurmdCPU   SlurmdCPUSpec   `json:"slurmdCPU,omitempty"`
+	SlurmdGPU   SlurmdGPUSpec   `json:"slurmdGPU,omitempty"`
 	Slurmdbd    SlurmdbdSpec    `json:"slurmdbd"`
 	SlurmLogin  SlurmLogindSpec `json:"login"`
 	// +kubebuilder:default="nano"
@@ -305,19 +322,39 @@ type ValuesSpec struct {
 type SlurmDeploymentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	Chart  ChartSpec  `json:"chart"`
-	Values ValuesSpec `json:"values"`
+	Chart  ChartSpec    `json:"chart"`
+	Job    SlurmJobSpec `json:"job"`
+	Values ValuesSpec   `json:"values"`
+}
+
+type SlurmJobSpec struct {
+	Command []string `json:"command,omitempty"`
+	Args    []string `json:"args,omitempty"`
 }
 
 // SlurmDeploymentStatus defines the observed state of SlurmDeployment.
 type SlurmDeploymentStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	CPUNodeCount        string `json:"cpuNodeCount,omitempty"`
+	GPUNodeCount        string `json:"gpuNodeCount,omitempty"`
+	LoginNodeCount      string `json:"loginNodeCount,omitempty"`
+	ControldDeamonCount string `json:"ctldNodeCount,omitempty"`
+	DatabaseDeamonCount string `json:"databaseDeamonCount,omitempty"`
+	MariadbServiceCount string `json:"mariadbServiceCount,omitempty"`
+	JobCommand          string `json:"jobCommand,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=sd;slurmdep
+// +kubebuilder:printcolumn:name="CPU",type="integer",JSONPath=".status.cpuNodeCount",description="Number of CPU nodes"
+// +kubebuilder:printcolumn:name="GPU",type="integer",JSONPath=".status.gpuNodeCount",description="Number of GPU nodes"
+// +kubebuilder:printcolumn:name="Login",type="integer",JSONPath=".status.loginNodeCount",description="Number of Login nodes"
+// +kubebuilder:printcolumn:name="Ctld",type="integer",JSONPath=".status.ctldNodeCount",description="Number of Ctld nodes"
+// +kubebuilder:printcolumn:name="DBd",type="integer",JSONPath=".status.databaseDeamonCount",description="Number of Db nodes"
+// +kubebuilder:printcolumn:name="DBsvc",type="integer",JSONPath=".status.mariadbServiceCount",description="Number of mariadb nodes"
+// +kubebuilder:printcolumn:name="Job Command",type="string",JSONPath=".status.jobCommand",description="Current job command"
 
 // SlurmDeployment is the Schema for the slurmdeployments API.
 type SlurmDeployment struct {
@@ -336,8 +373,8 @@ func (v *ValuesSpec) UnmarshalJSON(data []byte) error {
 		ImageMirror       ImageMirrorSpec    `json:"image,omitempty"`
 		Munged            MungedSpec         `json:"munged"`
 		Slurmctld         SlurmctldSpec      `json:"slurmctld"`
-		SlurmdCPU         SlurmdCPUSpec      `json:"slurmdCPU"`
-		SlurmdGPU         SlurmdGPUSpec      `json:"slurmdGPU"`
+		SlurmdCPU         SlurmdCPUSpec      `json:"slurmdCPU,omitempty"`
+		SlurmdGPU         SlurmdGPUSpec      `json:"slurmdGPU,omitempty"`
 		Slurmdbd          SlurmdbdSpec       `json:"slurmdbd"`
 		SlurmLogin        SlurmLogindSpec    `json:"login"`
 		ResourcesPreset   string             `json:"resourcesPreset,omitempty"`

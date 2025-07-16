@@ -32,7 +32,9 @@ import (
 	"path/filepath"
 	os_runtime "runtime"
 
+	apps "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -75,12 +77,6 @@ type SlurmDeploymentReconciler struct {
 // the SlurmDeployment object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
-func GetValueWithDefault[T any](ptr *T, defaultValue T) T {
-	if ptr != nil {
-		return *ptr
-	}
-	return defaultValue
-}
 
 // parseMemory 将内存字符串（如"4Gi"）转换为整数（MB为单位）
 func parseMemory(memoryStr string) int {
@@ -192,6 +188,14 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		}
 	}
 
+	if r.Spec.Values.SlurmdCPU.Resources.Requests == nil {
+		r.Spec.Values.SlurmdCPU.Resources.Requests = &slurmv1.ResourceRequestSpec{
+			CPU:              "1000m",
+			Memory:           "1Gi",
+			EphemeralStorage: "2Gi",
+		}
+	}
+
 	if r.Spec.Values.SlurmdGPU.Resources.Limits == nil {
 		r.Spec.Values.SlurmdGPU.Resources.Limits = &slurmv1.ResourceLimitSpec{
 			CPU:              "2000m",
@@ -200,11 +204,27 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 		}
 	}
 
+	if r.Spec.Values.SlurmdGPU.Resources.Requests == nil {
+		r.Spec.Values.SlurmdGPU.Resources.Requests = &slurmv1.ResourceRequestSpec{
+			CPU:              "1000m",
+			Memory:           "1Gi",
+			EphemeralStorage: "2Gi",
+		}
+	}
+
 	if r.Spec.Values.SlurmLogin.Resources.Limits == nil {
 		r.Spec.Values.SlurmLogin.Resources.Limits = &slurmv1.ResourceLimitSpec{
 			CPU:              "2000m",
 			Memory:           "8Gi",
 			EphemeralStorage: "20Gi",
+		}
+	}
+
+	if r.Spec.Values.SlurmLogin.Resources.Requests == nil {
+		r.Spec.Values.SlurmLogin.Resources.Requests = &slurmv1.ResourceRequestSpec{
+			CPU:              "1000m",
+			Memory:           "1Gi",
+			EphemeralStorage: "2Gi",
 		}
 	}
 
@@ -306,21 +326,21 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 			"automountServiceAccountToken": false,
 			"podLabels":                    map[string]string{},
-			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
 			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
-				"type":   "",
-				"key":    "",
-				"values": []string{},
+				"type":   r.Spec.Values.Slurmctld.NodeAffinityPreset.Type,
+				"key":    r.Spec.Values.Slurmctld.NodeAffinityPreset.Key,
+				"values": r.Spec.Values.Slurmctld.NodeAffinityPreset.Values,
+				"weight": r.Spec.Values.Slurmctld.NodeAffinityPreset.Weight,
 			},
 			"hostNetwork":               false,
 			"dnsPolicy":                 "",
 			"dnsConfig":                 map[string]string{},
 			"hostIPC":                   false,
 			"priorityClassName":         "",
-			"nodeSelector":              map[string]string{},
+			"nodeSelector":              r.Spec.Values.Slurmctld.NodeSelector,
 			"tolerations":               []string{},
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
@@ -411,21 +431,21 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 			"automountServiceAccountToken": false,
 			"podLabels":                    map[string]string{},
-			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
 			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
-				"type":   "",
-				"key":    "",
-				"values": []string{},
+				"type":   r.Spec.Values.SlurmdCPU.NodeAffinityPreset.Type,
+				"key":    r.Spec.Values.SlurmdCPU.NodeAffinityPreset.Key,
+				"values": r.Spec.Values.SlurmdCPU.NodeAffinityPreset.Values,
+				"weight": r.Spec.Values.SlurmdCPU.NodeAffinityPreset.Weight,
 			},
 			"hostNetwork":               false,
 			"dnsPolicy":                 "",
 			"dnsConfig":                 map[string]string{},
 			"hostIPC":                   false,
 			"priorityClassName":         "",
-			"nodeSelector":              map[string]string{},
+			"nodeSelector":              r.Spec.Values.SlurmdCPU.NodeSelector,
 			"tolerations":               []string{},
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
@@ -516,21 +536,21 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 			"automountServiceAccountToken": false,
 			"podLabels":                    map[string]string{},
-			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
 			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
-				"type":   "",
-				"key":    "",
-				"values": []string{},
+				"type":   r.Spec.Values.SlurmdGPU.NodeAffinityPreset.Type,
+				"key":    r.Spec.Values.SlurmdGPU.NodeAffinityPreset.Key,
+				"values": r.Spec.Values.SlurmdGPU.NodeAffinityPreset.Values,
+				"weight": r.Spec.Values.SlurmdGPU.NodeAffinityPreset.Weight,
 			},
 			"hostNetwork":               false,
 			"dnsPolicy":                 "",
 			"dnsConfig":                 map[string]string{},
 			"hostIPC":                   false,
 			"priorityClassName":         "",
-			"nodeSelector":              map[string]string{},
+			"nodeSelector":              r.Spec.Values.SlurmdGPU.NodeSelector,
 			"tolerations":               []string{},
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
@@ -621,21 +641,21 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 			"automountServiceAccountToken": false,
 			"podLabels":                    map[string]string{},
-			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
 			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
-				"type":   "",
-				"key":    "",
-				"values": []string{},
+				"type":   r.Spec.Values.Slurmdbd.NodeAffinityPreset.Type,
+				"key":    r.Spec.Values.Slurmdbd.NodeAffinityPreset.Key,
+				"values": r.Spec.Values.Slurmdbd.NodeAffinityPreset.Values,
+				"weight": r.Spec.Values.Slurmdbd.NodeAffinityPreset.Weight,
 			},
 			"hostNetwork":               false,
 			"dnsPolicy":                 "",
 			"dnsConfig":                 map[string]string{},
 			"hostIPC":                   false,
 			"priorityClassName":         "",
-			"nodeSelector":              map[string]string{},
+			"nodeSelector":              r.Spec.Values.Slurmdbd.NodeSelector,
 			"tolerations":               []string{},
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
@@ -714,21 +734,21 @@ func buildChartValues(r *slurmv1.SlurmDeployment) map[string]interface{} {
 			},
 			"automountServiceAccountToken": false,
 			"podLabels":                    map[string]string{},
-			"affinity":                     map[string]string{},
 			"podAnnatations":               map[string]string{},
 			"podAffinityPreset":            "",
 			"podAntiAffinityPreset":        "soft",
 			"nodeAffinityPreset": map[string]interface{}{
-				"type":   "",
-				"key":    "",
-				"values": []string{},
+				"type":   r.Spec.Values.SlurmLogin.NodeAffinityPreset.Type,
+				"key":    r.Spec.Values.SlurmLogin.NodeAffinityPreset.Key,
+				"values": r.Spec.Values.SlurmLogin.NodeAffinityPreset.Values,
+				"weight": r.Spec.Values.SlurmLogin.NodeAffinityPreset.Weight,
 			},
 			"hostNetwork":               false,
 			"dnsPolicy":                 "",
 			"dnsConfig":                 map[string]string{},
 			"hostIPC":                   false,
 			"priorityClassName":         "",
-			"nodeSelector":              map[string]string{},
+			"nodeSelector":              r.Spec.Values.SlurmLogin.NodeSelector,
 			"tolerations":               []string{},
 			"schedulerName":             "",
 			"topologySpreadConstraints": []string{},
@@ -846,8 +866,8 @@ SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
-NodeName={{ include "common.names.fullname" . }}-slurmd-cpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", parseMemory(r.Spec.Values.SlurmdCPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
-NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-999] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", parseMemory(r.Spec.Values.SlurmdGPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "common.names.fullname" . }}-slurmd-cpu-[0-` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.ReplicaCount) + `] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", parseMemory(r.Spec.Values.SlurmdCPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-` + fmt.Sprintf("%d", r.Spec.Values.SlurmdCPU.ReplicaCount) + `] CPUs=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", r.Spec.Values.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", parseMemory(r.Spec.Values.SlurmdGPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
 PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP`,
 			"slurmdbdConf": `AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2
@@ -881,6 +901,8 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 	log.Printf("Find SlurmDeployment %s", release.Name)
 
+	log.Printf("---> Job: %v", release.Spec.Job)
+
 	// Initialize Helm settings and configuration
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
@@ -898,16 +920,14 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 			// Uninstall the Helm release
 			uninstallClient := action.NewUninstall(actionConfig)
-			uninstallClient.DisableHooks = true        // 禁用钩子，避免cleanup job失败阻塞卸载过程
-			uninstallClient.Timeout = 60 * time.Second // 设置较短的超时时间
-			uninstallClient.Wait = false               // 不等待资源完全删除
+			uninstallClient.DisableHooks = true
+			uninstallClient.Timeout = 60 * time.Second
+			uninstallClient.Wait = false
 			_, err := uninstallClient.Run(release.Name)
 			if err != nil {
-				// 如果错误是因为release不存在，我们可以忽略这个错误
 				if strings.Contains(err.Error(), "release: not found") {
 					log.Printf("Helm release %s not found, skipping uninstall", release.Name)
 				} else if strings.Contains(err.Error(), "timed out") || strings.Contains(err.Error(), "BackoffLimitExceeded") {
-					// 忽略超时错误和BackoffLimitExceeded错误，继续删除CR
 					log.Printf("Helm release %s uninstall timed out or job failed, continuing with CR deletion: %v", release.Name, err)
 				} else {
 					log.Printf("Failed to uninstall Helm release %s: %v", release.Name, err)
@@ -962,20 +982,6 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// build values yaml content for Slurm Chart
 	values := buildChartValues(release)
 
-	// import (
-	// 	"fmt"
-	// 	"gopkg.in/yaml.v3"
-	// )
-	// // // 将 map 转换为 YAML
-	// yamlData, err := yaml.Marshal(values)
-	// if err != nil {
-	// 	panic(fmt.Errorf("YAML marshal error: %w", err))
-	// }
-
-	// // 打印 YAML 输出
-	// fmt.Println("YAML Output:")
-	// fmt.Println(string(yamlData))
-
 	// Check release if exists
 	histClient := action.NewHistory(actionConfig)
 	if _, err := histClient.Run(release.Name); err == nil {
@@ -984,6 +990,12 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		upgradeClient.Namespace = release.Spec.Chart.Namespace
 
 		_, err = upgradeClient.Run(release.Name, getChart(release), values)
+		if err == nil {
+			result, err := r.UpdateReleaseStatus(ctx, release)
+			if err != nil {
+				return result, err
+			}
+		}
 		return handleResult(err)
 	}
 
@@ -992,7 +1004,73 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	installClient.ReleaseName = release.Name
 	installClient.Namespace = release.Spec.Chart.Namespace
 	_, err := installClient.Run(getChart(release), values)
+	if err == nil {
+		result, err := r.UpdateReleaseStatus(ctx, release)
+		if err != nil {
+			return result, err
+		}
+	}
 	return handleResult(err)
+}
+
+// UpdateReleaseStatus updates the SlurmDeployment status with node counts and saves to Kubernetes
+func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, release *slurmv1.SlurmDeployment) (ctrl.Result, error) {
+	cpuSTS, _ := r.retrieveSTSInfo(ctx, release, "-slurmd-cpu")
+
+	gpuSTS, _ := r.retrieveSTSInfo(ctx, release, "-slurmd-gpu")
+
+	controldSTS, _ := r.retrieveSTSInfo(ctx, release, "-slurmctld")
+
+	databasedSTS, _ := r.retrieveSTSInfo(ctx, release, "-slurmdbd")
+
+	mariadbSTS, _ := r.retrieveSTSInfo(ctx, release, "-mariadb")
+
+	login, _ := r.retrieveDeployInfo(ctx, release, "-login")
+
+	// Update CPU node count
+	release.Status.CPUNodeCount = fmt.Sprintf("%d/%d", cpuSTS.Status.ReadyReplicas, cpuSTS.Status.Replicas)
+	// Update GPU node count
+	release.Status.GPUNodeCount = fmt.Sprintf("%d/%d", gpuSTS.Status.ReadyReplicas, gpuSTS.Status.Replicas)
+	// Update controld node count
+	release.Status.ControldDeamonCount = fmt.Sprintf("%d/%d", controldSTS.Status.ReadyReplicas, controldSTS.Status.Replicas)
+	// Update database node count
+	release.Status.DatabaseDeamonCount = fmt.Sprintf("%d/%d", databasedSTS.Status.ReadyReplicas, databasedSTS.Status.Replicas)
+	// Update maridb node count
+	release.Status.MariadbServiceCount = fmt.Sprintf("%d/%d", mariadbSTS.Status.ReadyReplicas, mariadbSTS.Status.Replicas)
+	// Update login node count
+	release.Status.LoginNodeCount = fmt.Sprintf("%d/%d", login.Status.AvailableReplicas, login.Status.Replicas)
+	// Show the command
+	release.Status.JobCommand = strings.Join(append(release.Spec.Job.Command, release.Spec.Job.Args...), " ")
+	// Update the status in Kubernetes
+	if err := r.Status().Update(ctx, release); err != nil {
+		log.Printf("Failed to update status: %v", err)
+		return ctrl.Result{}, err
+	}
+	return ctrl.Result{}, nil
+}
+
+func (r *SlurmDeploymentReconciler) retrieveSTSInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (apps.StatefulSet, error) {
+	sts := &apps.StatefulSet{}
+	if err := r.Client.Get(ctx, types.NamespacedName{
+		Name:      release.Name + suffix,
+		Namespace: release.Spec.Chart.Namespace,
+	}, sts); err != nil {
+		log.Printf("Failed to get slurm-slurmd-cpu StatefulSet: %v", err)
+		return *sts, err
+	}
+	return *sts, nil
+}
+
+func (r *SlurmDeploymentReconciler) retrieveDeployInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (apps.Deployment, error) {
+	deploy := &apps.Deployment{}
+	if err := r.Client.Get(ctx, types.NamespacedName{
+		Name:      release.Name + suffix,
+		Namespace: release.Spec.Chart.Namespace,
+	}, deploy); err != nil {
+		log.Printf("Failed to get slurm-slurmd-cpu StatefulSet: %v", err)
+		return *deploy, err
+	}
+	return *deploy, nil
 }
 
 func handleResult(err error) (ctrl.Result, error) {

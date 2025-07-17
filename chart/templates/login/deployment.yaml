@@ -1,7 +1,7 @@
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "common.names.fullname" . }}-{{ .Values.login.name }}
+  name: {{ include "slurm.fullname" . }}-{{ .Values.login.name }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.login.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: login
@@ -51,10 +51,10 @@ spec:
       {{- else }}
       dnsConfig:
         searches:
-          - {{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmdCPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmdbd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdCPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdbd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
       {{- end }}
       hostIPC: {{ .Values.login.hostIPC }}
       {{- if .Values.login.priorityClassName }}
@@ -227,10 +227,10 @@ spec:
             claimName: {{ .Values.persistence.shared.name }}
         - name: slurm-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-slurm-conf
+            name: {{ include "slurm.fullname" . }}-slurm-conf
         - name: cgroup-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-cgroup-conf
+            name: {{ include "slurm.fullname" . }}-cgroup-conf
         - name: munge-socket-file
           emptyDir: {}
         {{- if .Values.login.extraVolumes }}

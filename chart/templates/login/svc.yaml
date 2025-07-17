@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.login.service.name }}
+  name: {{ .Release.Name }}-{{ .Values.login.service.name }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels:
   {{- include "common.labels.standard" ( dict "customLabels" .Values.login.commonLabels "context" $ ) | nindent 4 }}

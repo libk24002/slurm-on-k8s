@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.slurmctld.service.name }}
+  name: {{ .Release.Name }}-{{ .Values.slurmctld.service.name }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels:
   {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmctld.commonLabels "context" $ ) | nindent 4 }}

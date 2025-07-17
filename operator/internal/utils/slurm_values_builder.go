@@ -696,7 +696,7 @@ ConstrainRAMSpace=yes
 ConstrainSwapSpace=no`,
 			},
 			"slurmConf": `ClusterName=slurm-cluster
-SlurmctldHost={{ include "common.names.fullname" . }}-{{ .Values.slurmctld.name }}-0
+SlurmctldHost={{ include "slurm.fullname" . }}-{{ .Values.slurmctld.name }}-0
 MpiDefault=pmi2
 ProctrackType=proctrack/cgroup
 ReturnToService=1
@@ -716,7 +716,7 @@ SlurmdTimeout=300
 Waittime=0
 SchedulerType=sched/backfill
 SelectType=select/cons_tres
-AccountingStorageHost={{ include "common.names.fullname" . }}-{{ .Values.slurmdbd.name }}-0
+AccountingStorageHost={{ include "slurm.fullname" . }}-{{ .Values.slurmdbd.name }}-0
 AccountingStoragePort={{ .Values.slurmdbd.service.slurmdbd.port }}
 AccountingStorageType=accounting_storage/slurmdbd
 AccountingStoreFlags=job_comment
@@ -726,8 +726,8 @@ SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
-NodeName={{ include "common.names.fullname" . }}-slurmd-cpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.ReplicaCount) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdCPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
-NodeName={{ include "common.names.fullname" . }}-slurmd-gpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.ReplicaCount) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdGPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "slurm.fullname" . }}-slurmd-cpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.ReplicaCount) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdCPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "slurm.fullname" . }}-slurmd-gpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.ReplicaCount) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdGPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
 PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP`,
 			"slurmdbdConf": `AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2
@@ -735,10 +735,10 @@ SlurmUser=slurm
 DebugLevel=verbose
 LogFile=/var/log/slurm/slurmdbd.log
 PidFile=/var/run/slurmdbd.pid
-DbdHost={{ include "common.names.fullname" . }}-{{ .Values.slurmdbd.name }}-0
+DbdHost={{ include "slurm.fullname" . }}-{{ .Values.slurmdbd.name }}-0
 DbdPort={{ .Values.slurmdbd.service.slurmdbd.port }}
 StorageType=accounting_storage/mysql
-StorageHost={{ include "common.names.fullname" . }}-mariadb
+StorageHost={{ include "slurm.fullname" . }}-mariadb
 StoragePort={{ .Values.mariadb.port }}
 StoragePass={{ .Values.mariadb.auth.password }}
 StorageUser={{ .Values.mariadb.auth.username }}

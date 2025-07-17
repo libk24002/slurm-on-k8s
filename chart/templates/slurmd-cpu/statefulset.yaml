@@ -1,7 +1,7 @@
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
-  name: {{ include "common.names.fullname" . }}-slurmd-cpu
+  name: {{ include "slurm.fullname" . }}-slurmd-cpu
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmdCPU.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: slurmd-cpu
@@ -18,7 +18,7 @@ spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
       app.kubernetes.io/component: slurmd-cpu
-  serviceName: {{ .Values.slurmdCPU.service.name }}
+  serviceName: {{ .Release.Name }}-{{ .Values.slurmdCPU.service.name }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
@@ -52,9 +52,9 @@ spec:
       {{- else }}
       dnsConfig:
         searches:
-          - {{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmdCPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdCPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
       {{- end }}
       hostIPC: {{ .Values.slurmdCPU.hostIPC }}
       {{- if .Values.slurmdCPU.priorityClassName }}
@@ -219,10 +219,10 @@ spec:
             claimName: {{ .Values.persistence.shared.name }}
         - name: slurm-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-slurm-conf
+            name: {{ include "slurm.fullname" . }}-slurm-conf
         - name: cgroup-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-cgroup-conf
+            name: {{ include "slurm.fullname" . }}-cgroup-conf
         - name: munge-socket-file
           emptyDir: {}
         {{- if .Values.slurmdCPU.extraVolumes }}

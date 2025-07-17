@@ -11,16 +11,8 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 If release name contains chart name it will be used as a full name.
 */}}
 {{- define "slurm.fullname" -}}
-{{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
 {{- $name := default .Chart.Name .Values.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
 {{- end }}
 
 {{/*
@@ -54,21 +46,21 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "slurm.serviceAccountName" -}}
-{{ default (include "common.names.fullname" .) .Values.serviceAccount.name }}
+{{ default (include "slurm.fullname" .) .Values.serviceAccount.name }}
 {{- end }}
 
 {{/*
 Create the name of the role to use
 */}}
 {{- define "slurm.roleName" -}}
-{{ default (include "common.names.fullname" .) .Values.serviceAccount.role.name }}
+{{ default (include "slurm.fullname" .) .Values.serviceAccount.role.name }}
 {{- end }}
 
 {{/*
 Create the name of the rolebinding to use
 */}}
 {{- define "slurm.roleBindingName" -}}
-{{ default (include "common.names.fullname" .) .Values.serviceAccount.roleBinding.name }}
+{{ default (include "slurm.fullname" .) .Values.serviceAccount.roleBinding.name }}
 {{- end }}
 
 {{/*

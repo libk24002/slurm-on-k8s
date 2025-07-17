@@ -1,7 +1,7 @@
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
-  name: {{ include "common.names.fullname" . }}-{{ .Values.slurmdbd.name }}
+  name: {{ include "slurm.fullname" . }}-{{ .Values.slurmdbd.name }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmdbd.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: slurmdbd
@@ -18,7 +18,7 @@ spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
       app.kubernetes.io/component: slurmdbd
-  serviceName: {{ .Values.slurmdbd.service.name }}
+  serviceName: {{ .Release.Name }}-{{ .Values.slurmdbd.service.name }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
@@ -52,7 +52,7 @@ spec:
       {{- else }}
       dnsConfig:
         searches:
-          - {{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmctld.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
       {{- end }}
       hostIPC: {{ .Values.slurmdbd.hostIPC }}
       {{- if .Values.slurmdbd.priorityClassName }}
@@ -212,10 +212,10 @@ spec:
                 mode: 384
         - name: slurmdbd-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-slurmdbd-conf
+            name: {{ include "slurm.fullname" . }}-slurmdbd-conf
         - name: cgroup-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-cgroup-conf
+            name: {{ include "slurm.fullname" . }}-cgroup-conf
         - name: munge-socket-file
           emptyDir: {}
         {{- if .Values.slurmdbd.extraVolumes }}

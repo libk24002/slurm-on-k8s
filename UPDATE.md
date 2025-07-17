@@ -51,7 +51,7 @@ Slurm on Kubernetes provides the following features:
         ```
     2. test your helm chart
         ```shell
-        helm upgrade --create-namespace -n slurm --install -f ./chart/values.yaml slurm /tmp/slurm-1.0.8.tgz
+        helm upgrade --create-namespace -n slurm --install -f ./chart/values.yaml lensing /tmp/slurm-1.0.9.tgz
         ```
     3. index your chart
         ```shell

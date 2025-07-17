@@ -276,5 +276,7 @@ func (r *SlurmDeploymentReconciler) RetrieveDeployInfo(ctx context.Context, rele
 func (r *SlurmDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&slurmv1.SlurmDeployment{}).
+		Owns(&appsv1.StatefulSet{}).
+		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }

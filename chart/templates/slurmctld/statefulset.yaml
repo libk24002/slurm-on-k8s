@@ -1,7 +1,7 @@
 apiVersion:  {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
-  name: {{ include "common.names.fullname" . }}-{{ .Values.slurmctld.name }}
+  name: {{ include "slurm.fullname" . }}-{{ .Values.slurmctld.name }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmctld.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: slurmctld
@@ -18,7 +18,7 @@ spec:
   selector:
     matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
       app.kubernetes.io/component: slurmctld
-  serviceName: {{ .Values.slurmctld.service.name }}
+  serviceName: {{ .Release.Name }}-{{ .Values.slurmctld.service.name }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
@@ -52,9 +52,9 @@ spec:
       {{- else }}
       dnsConfig:
         searches:
-          - {{ .Values.slurmdCPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-          - {{ .Values.slurmdbd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdCPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdGPU.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          - {{ .Release.Name }}-{{ .Values.slurmdbd.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
       {{- end }}
       hostIPC: {{ .Values.slurmctld.hostIPC }}
       {{- if .Values.slurmctld.priorityClassName }}
@@ -98,7 +98,7 @@ spec:
               done
           env:
             - name: SLURMDBD_HOSTNAME
-              value: {{ include "common.names.fullname" . }}-{{ .Values.slurmdbd.name }}-0
+              value: {{ include "slurm.fullname" . }}-{{ .Values.slurmdbd.name }}-0
             - name: SLURMDBD_PORT
               value: {{ .Values.slurmdbd.service.slurmdbd.port | quote }}
         - name: init-permission
@@ -242,10 +242,10 @@ spec:
             claimName: {{ .Values.persistence.shared.name }}
         - name: slurm-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-slurm-conf
+            name: {{ include "slurm.fullname" . }}-slurm-conf
         - name: cgroup-conf-file
           configMap:
-            name: {{ include "common.names.fullname" . }}-cgroup-conf
+            name: {{ include "slurm.fullname" . }}-cgroup-conf
         - name: munge-socket-file
           emptyDir: {}
         {{- if .Values.slurmctld.extraVolumes }}

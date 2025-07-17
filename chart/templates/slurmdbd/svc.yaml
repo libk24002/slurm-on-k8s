@@ -1,14 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.slurmdbd.service.name }}
+  name: {{ .Release.Name }}-{{ .Values.slurmdbd.service.name }}
   namespace: {{ include "common.names.namespace" . | quote }}
   labels:
     {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmdbd.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/component: slurmdbd
 spec:
   type: ClusterIP
-  clusterIP: None
   {{- if .Values.slurmctld.service.publishNotReadyAddresses }}
   publishNotReadyAddresses: {{ .Values.slurmctld.service.publishNotReadyAddresses }}
   {{- end }}

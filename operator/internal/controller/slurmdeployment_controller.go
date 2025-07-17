@@ -78,23 +78,23 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// get CR SlurmDeployment instance
 	release := &slurmv1.SlurmDeployment{}
 	// Create namespace if not exist
-	if _, err := r.createNamespaceIfNotExist(ctx, release.Spec.Chart.Namespace); err != nil {
-		log.Printf("Failed to create namespace [%s]: %v", release.Spec.Chart.Namespace, err)
-		return ctrl.Result{}, err
+	if _, createNamespaceErr := r.createNamespaceIfNotExist(ctx, release.Spec.Chart.Namespace); createNamespaceErr != nil {
+		log.Printf("Failed to create namespace [%s]: %v", release.Spec.Chart.Namespace, createNamespaceErr)
+		return ctrl.Result{}, createNamespaceErr
 	}
 	log.Printf("Find Namespace [%s]", release.Spec.Chart.Namespace)
 
-	if err := r.Get(ctx, req.NamespacedName, release); err != nil {
-		return ctrl.Result{}, client.IgnoreNotFound(err)
+	if findReleaseErr := r.Get(ctx, req.NamespacedName, release); findReleaseErr != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(findReleaseErr)
 	}
 	log.Printf("Find SlurmDeployment %s in namespace [%s], Going to run Job: %v", release.Name, release.Spec.Chart.Namespace, release.Spec.Job)
 
 	// Initialize Helm settings and configuration
 	helmSettings := cli.New()
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(helmSettings.RESTClientGetter(), release.Spec.Chart.Namespace, "secret", log.Printf); err != nil {
-		log.Fatalf("Failed to initialize Helm configuration: %v", err)
-		return ctrl.Result{}, err
+	if helmClientErr := actionConfig.Init(helmSettings.RESTClientGetter(), release.Spec.Chart.Namespace, "secret", log.Printf); helmClientErr != nil {
+		log.Fatalf("Failed to initialize Helm configuration: %v", helmClientErr)
+		return ctrl.Result{}, helmClientErr
 	}
 	log.Printf("Helm configuration initialized in namespace [%s]", release.Spec.Chart.Namespace)
 
@@ -110,22 +110,22 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			uninstallClient.DisableHooks = true
 			uninstallClient.Timeout = 60 * time.Second
 			uninstallClient.Wait = false
-			_, err := uninstallClient.Run(release.Name)
-			if err != nil {
-				if strings.Contains(err.Error(), "release: not found") {
+
+			if _, uninstallErr := uninstallClient.Run(release.Name); uninstallErr != nil {
+				if strings.Contains(uninstallErr.Error(), "release: not found") {
 					log.Printf("SlurmDeployment %s not found, skipping uninstall", release.Name)
-				} else if strings.Contains(err.Error(), "timed out") || strings.Contains(err.Error(), "BackoffLimitExceeded") {
-					log.Printf("SlurmDeployment %s uninstall timed out or job failed, continuing with CR deletion: %v", release.Name, err)
+				} else if strings.Contains(uninstallErr.Error(), "timed out") || strings.Contains(uninstallErr.Error(), "BackoffLimitExceeded") {
+					log.Printf("SlurmDeployment %s uninstall timed out or job failed, continuing with CR deletion: %v", release.Name, uninstallErr)
 				} else {
-					log.Printf("Failed to uninstall SlurmDeployment %s: %v", release.Name, err)
-					return ctrl.Result{}, err
+					log.Printf("Failed to uninstall SlurmDeployment %s: %v", release.Name, uninstallErr)
+					return ctrl.Result{}, uninstallErr
 				}
 			}
 
 			// Remove our finalizer from the list and update it
 			release.ObjectMeta.Finalizers = utils.SplitHeadArray(release.ObjectMeta.Finalizers, SlurmDeploymentFinalizer)
-			if err := r.Update(ctx, release); err != nil {
-				return ctrl.Result{}, err
+			if updateStatusErr := r.Update(ctx, release); updateStatusErr != nil {
+				return ctrl.Result{}, updateStatusErr
 			}
 		}
 		// Stop reconciliation as the item is being deleted
@@ -136,46 +136,51 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	if !utils.CheckIfExistInArray(release.ObjectMeta.Finalizers, SlurmDeploymentFinalizer) {
 		log.Printf("Adding finalizer to SlurmDeployment %s", release.Name)
 		release.ObjectMeta.Finalizers = append(release.ObjectMeta.Finalizers, SlurmDeploymentFinalizer)
-		if err := r.Update(ctx, release); err != nil {
-			return ctrl.Result{}, err
+		if updateStatusErr := r.Update(ctx, release); updateStatusErr != nil {
+			return ctrl.Result{}, updateStatusErr
 		}
 		// Requeue to continue with installation after finalizer is added
 		return ctrl.Result{Requeue: true}, nil
 	}
 
 	// build values yaml content for Slurm Chart
-	values := utils.BuildSlurmValues(&release.Spec.Values)
+	chartValues := utils.BuildSlurmValues(&release.Spec.Values)
 
 	// Check release if exists
 	histClient := action.NewHistory(actionConfig)
 	slurmChart := utils.DownloadChart(release.Spec.Chart.Name, release.Spec.Chart.Repository, release.Spec.Chart.Version)
-	if _, err := histClient.Run(release.Name); err == nil {
+	if _, getHistoryErr := histClient.Run(release.Name); getHistoryErr == nil {
 		// upgrade release
 		upgradeClient := action.NewUpgrade(actionConfig)
 		upgradeClient.Namespace = release.Spec.Chart.Namespace
 
-		_, err = upgradeClient.Run(release.Name, slurmChart, values)
-		if err == nil {
-			result, err := r.UpdateReleaseStatus(ctx, release)
-			if err != nil {
-				return result, err
+		if _, upgradeError := upgradeClient.Run(release.Name, slurmChart, chartValues); upgradeError != nil {
+			log.Printf("Failed to upgrade release %s in namespace [%s]: %v", release.Name, release.Spec.Chart.Namespace, upgradeError)
+			return ctrl.Result{}, upgradeError
+		} else {
+			if _, updateStatusErr := r.UpdateReleaseStatus(ctx, release); updateStatusErr != nil {
+				return ctrl.Result{}, updateStatusErr
 			}
 		}
-		return ctrl.Result{}, err
-	}
+		return ctrl.Result{}, getHistoryErr
+	} else {
+		log.Printf("Cannot find release %s in namespace [%s] : %v", release.Name, release.Spec.Chart.Namespace, getHistoryErr)
+		// install a new release
+		installClient := action.NewInstall(actionConfig)
+		installClient.ReleaseName = release.Name
+		installClient.Namespace = release.Spec.Chart.Namespace
 
-	// install a new release
-	installClient := action.NewInstall(actionConfig)
-	installClient.ReleaseName = release.Name
-	installClient.Namespace = release.Spec.Chart.Namespace
-	_, err := installClient.Run(slurmChart, values)
-	if err == nil {
-		result, err := r.UpdateReleaseStatus(ctx, release)
-		if err != nil {
-			return result, err
+		if _, installErr := installClient.Run(slurmChart, chartValues); installErr != nil {
+			log.Printf("Failed to install release %s in namespace [%s]: %v", release.Name, release.Spec.Chart.Namespace, installErr)
+			return ctrl.Result{}, installErr
+		} else {
+			if _, updateStatusErr := r.UpdateReleaseStatus(ctx, release); updateStatusErr != nil {
+				return ctrl.Result{}, updateStatusErr
+			}
 		}
 	}
-	return ctrl.Result{}, err
+
+	return ctrl.Result{}, nil
 }
 
 // UpdateReleaseStatus updates the SlurmDeployment status with node counts and saves to Kubernetes
@@ -225,9 +230,9 @@ func (r *SlurmDeploymentReconciler) createNamespaceIfNotExist(ctx context.Contex
 					Name: namespace,
 				},
 			}
-			if err := r.Create(ctx, ns); err != nil {
+			if errr := r.Create(ctx, ns); err != nil {
 				log.Printf("Failed to create namespace [%s]: %v", namespace, err)
-				return ctrl.Result{}, err
+				return ctrl.Result{}, errr
 			}
 			log.Printf("Namespace [%s] created successfully", namespace)
 		} else if err != nil {

@@ -25,7 +25,6 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 
 	"helm.sh/helm/v3/pkg/action"
@@ -39,6 +38,7 @@ import (
 	slurmv1 "github.com/AaronYang0628/slurm-on-k8s/api/v1"
 
 	utils "github.com/AaronYang0628/slurm-on-k8s/internal/utils"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // SlurmDeploymentReconciler reconciles a SlurmDeployment object
@@ -77,17 +77,18 @@ const SlurmDeploymentFinalizer = "slurm.ay.dev/finalizer"
 func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	// get CR SlurmDeployment instance
 	release := &slurmv1.SlurmDeployment{}
-	// Create namespace if not exist
-	if _, createNamespaceErr := r.createNamespaceIfNotExist(ctx, release.Spec.Chart.Namespace); createNamespaceErr != nil {
-		log.Printf("Failed to create namespace [%s]: %v", release.Spec.Chart.Namespace, createNamespaceErr)
-		return ctrl.Result{}, createNamespaceErr
-	}
-	log.Printf("Find Namespace [%s]", release.Spec.Chart.Namespace)
 
 	if findReleaseErr := r.Get(ctx, req.NamespacedName, release); findReleaseErr != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(findReleaseErr)
 	}
-	log.Printf("Find SlurmDeployment %s in namespace [%s], Going to run Job: %v", release.Name, release.Spec.Chart.Namespace, release.Spec.Job)
+	log.Printf("Find SlurmDeployment %s, Going to run Job: %v", release.Name, release.Spec.Job)
+
+	// Create namespace if not exist
+	if _, createNamespaceErr := r.CreateNamespaceIfNotExist(ctx, release.Spec.Chart.Namespace); createNamespaceErr != nil {
+		log.Printf("Failed to create namespace [%s]: %v", release.Spec.Chart.Namespace, createNamespaceErr)
+		return ctrl.Result{}, createNamespaceErr
+	}
+	log.Printf("Find Namespace [%s]", release.Spec.Chart.Namespace)
 
 	// Initialize Helm settings and configuration
 	helmSettings := cli.New()
@@ -107,7 +108,7 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 			// Uninstall the Helm release
 			uninstallClient := action.NewUninstall(actionConfig)
-			uninstallClient.DisableHooks = true
+			// uninstallClient.DisableHooks = true
 			uninstallClient.Timeout = 60 * time.Second
 			uninstallClient.Wait = false
 
@@ -185,17 +186,17 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 // UpdateReleaseStatus updates the SlurmDeployment status with node counts and saves to Kubernetes
 func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, release *slurmv1.SlurmDeployment) (ctrl.Result, error) {
-	cpuSTS, _ := r.retrieveStatefulSetInfo(ctx, release, "-slurmd-cpu")
+	cpuSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmd-cpu")
 
-	gpuSTS, _ := r.retrieveStatefulSetInfo(ctx, release, "-slurmd-gpu")
+	gpuSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmd-gpu")
 
-	controldSTS, _ := r.retrieveStatefulSetInfo(ctx, release, "-slurmctld")
+	controldSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmctld")
 
-	databasedSTS, _ := r.retrieveStatefulSetInfo(ctx, release, "-slurmdbd")
+	databasedSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmdbd")
 
-	mariadbSTS, _ := r.retrieveStatefulSetInfo(ctx, release, "-mariadb")
+	mariadbSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-mariadb")
 
-	loginDeploy, _ := r.retrieveDeployInfo(ctx, release, "-login")
+	loginNodeDeploy, _ := r.RetrieveDeployInfo(ctx, release, "-login")
 
 	// Update CPU node count
 	release.Status.CPUNodeCount = fmt.Sprintf("%d/%d", cpuSTS.Status.ReadyReplicas, cpuSTS.Status.Replicas)
@@ -208,61 +209,64 @@ func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, rel
 	// Update maridb node count
 	release.Status.MariadbServiceCount = fmt.Sprintf("%d/%d", mariadbSTS.Status.ReadyReplicas, mariadbSTS.Status.Replicas)
 	// Update login node count
-	release.Status.LoginNodeCount = fmt.Sprintf("%d/%d", loginDeploy.Status.AvailableReplicas, loginDeploy.Status.Replicas)
+	release.Status.LoginNodeCount = fmt.Sprintf("%d/%d", loginNodeDeploy.Status.AvailableReplicas, loginNodeDeploy.Status.Replicas)
 	// Show the command
 	release.Status.JobCommand = strings.Join(append(release.Spec.Job.Command, release.Spec.Job.Args...), " ")
+
 	// Update the status in Kubernetes
-	if err := r.Status().Update(ctx, release); err != nil {
-		log.Printf("Failed to update status: %v", err)
-		return ctrl.Result{}, err
+	if updateStatusErr := r.Status().Update(ctx, release); updateStatusErr != nil {
+		log.Printf("Failed to update status: %v", updateStatusErr)
+		return ctrl.Result{}, updateStatusErr
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *SlurmDeploymentReconciler) createNamespaceIfNotExist(ctx context.Context, namespace string) (ctrl.Result, error) {
+func (r *SlurmDeploymentReconciler) CreateNamespaceIfNotExist(ctx context.Context, namespace string) (ctrl.Result, error) {
 	if namespace != "" {
-		ns := &corev1.Namespace{}
-		err := r.Get(ctx, client.ObjectKey{Name: namespace}, ns)
-		if errors.IsNotFound(err) {
-			// Namespace does not exist, create it
-			ns = &corev1.Namespace{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: namespace,
-				},
+		// 尝试获取命名空间
+		if err := r.Get(ctx, client.ObjectKey{Name: namespace}, &corev1.Namespace{}); err != nil {
+			// 仅当命名空间不存在时才创建
+			if apierrors.IsNotFound(err) {
+				if createErr := r.Create(ctx, &corev1.Namespace{
+					ObjectMeta: metav1.ObjectMeta{Name: namespace},
+				}); createErr != nil {
+					log.Printf("Failed to create namespace [%s]: %v", namespace, createErr)
+					return ctrl.Result{}, createErr
+				}
+				log.Printf("Namespace [%s] created successfully", namespace)
+			} else {
+				// 其他错误（如权限问题）才返回错误
+				log.Printf("Failed to get namespace [%s]: %v", namespace, err)
+				return ctrl.Result{}, err
 			}
-			if errr := r.Create(ctx, ns); err != nil {
-				log.Printf("Failed to create namespace [%s]: %v", namespace, err)
-				return ctrl.Result{}, errr
-			}
-			log.Printf("Namespace [%s] created successfully", namespace)
-		} else if err != nil {
-			log.Printf("Failed to get namespace [%s]: %v", namespace, err)
-			return ctrl.Result{}, err
+		} else {
+			// 命名空间已存在，无需操作
+			log.Printf("Namespace [%s] already exists", namespace)
 		}
 	}
 	return ctrl.Result{}, nil
 }
 
-func (r *SlurmDeploymentReconciler) retrieveStatefulSetInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (appsv1.StatefulSet, error) {
+func (r *SlurmDeploymentReconciler) RetrieveStatefulSetInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (appsv1.StatefulSet, error) {
 	sts := &appsv1.StatefulSet{}
-	if err := r.Client.Get(ctx, types.NamespacedName{
+	if k8sGetInfoErr := r.Client.Get(ctx, types.NamespacedName{
 		Name:      release.Name + suffix,
 		Namespace: release.Spec.Chart.Namespace,
-	}, sts); err != nil {
-		log.Printf("Failed to get slurm-slurmd-cpu StatefulSet: %v", err)
-		return *sts, err
+	}, sts); k8sGetInfoErr != nil {
+		log.Printf("Failed to get StatefulSet: %v", k8sGetInfoErr)
+		return *sts, k8sGetInfoErr
 	}
 	return *sts, nil
 }
 
-func (r *SlurmDeploymentReconciler) retrieveDeployInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (appsv1.Deployment, error) {
+func (r *SlurmDeploymentReconciler) RetrieveDeployInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (appsv1.Deployment, error) {
 	deploy := &appsv1.Deployment{}
-	if err := r.Client.Get(ctx, types.NamespacedName{
+	if k8sGetInfoErr := r.Client.Get(ctx, types.NamespacedName{
 		Name:      release.Name + suffix,
 		Namespace: release.Spec.Chart.Namespace,
-	}, deploy); err != nil {
-		log.Printf("Failed to get slurm-slurmd-cpu StatefulSet: %v", err)
-		return *deploy, err
+	}, deploy); k8sGetInfoErr != nil {
+		log.Printf("Failed to get Deployment : %v", k8sGetInfoErr)
+		return *deploy, k8sGetInfoErr
 	}
 	return *deploy, nil
 }

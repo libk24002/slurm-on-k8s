@@ -323,7 +323,7 @@ type SlurmDeploymentSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	Chart  ChartSpec    `json:"chart"`
-	Job    SlurmJobSpec `json:"job"`
+	Job    SlurmJobSpec `json:"job,omitempty"`
 	Values ValuesSpec   `json:"values"`
 }
 

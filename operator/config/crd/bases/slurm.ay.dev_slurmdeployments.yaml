@@ -1044,7 +1044,6 @@ spec:
                 type: object
             required:
             - chart
-            - job
             - values
             type: object
           status:

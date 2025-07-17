@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// ParseMemory 将内存字符串（如"4Gi"）转换为整数（MB为单位）
-func parse_ram_str(memoryStr string) int {
+// ParseRAMstr 将内存字符串（如"4Gi"）转换为整数（MB为单位）
+func ParseRAMstr(memoryStr string) int {
 	// 移除空格
 	memoryStr = strings.TrimSpace(memoryStr)
 	// 如果字符串为空，返回默认值
@@ -73,4 +73,23 @@ func parse_ram_str(memoryStr string) int {
 		// 如果没有单位或单位不识别，假设是MB
 		return int(value)
 	}
+}
+
+func CheckIfExistInArray(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+func SplitHeadArray(slice []string, s string) []string {
+	result := make([]string, 0, len(slice))
+	for _, item := range slice {
+		if item != s {
+			result = append(result, item)
+		}
+	}
+	return result
 }

@@ -343,18 +343,20 @@ type SlurmDeploymentStatus struct {
 	DatabaseDeamonCount string `json:"databaseDeamonCount,omitempty"`
 	MariadbServiceCount string `json:"mariadbServiceCount,omitempty"`
 	JobCommand          string `json:"jobCommand,omitempty"`
+	ClusterStatus       string `json:"clusterStatus,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=sd;slurmdep
-// +kubebuilder:printcolumn:name="CPU",type="integer",JSONPath=".status.cpuNodeCount",description="Number of CPU nodes"
-// +kubebuilder:printcolumn:name="GPU",type="integer",JSONPath=".status.gpuNodeCount",description="Number of GPU nodes"
-// +kubebuilder:printcolumn:name="Login",type="integer",JSONPath=".status.loginNodeCount",description="Number of Login nodes"
-// +kubebuilder:printcolumn:name="Ctld",type="integer",JSONPath=".status.ctldNodeCount",description="Number of Ctld nodes"
-// +kubebuilder:printcolumn:name="DBd",type="integer",JSONPath=".status.databaseDeamonCount",description="Number of Db nodes"
-// +kubebuilder:printcolumn:name="DBsvc",type="integer",JSONPath=".status.mariadbServiceCount",description="Number of mariadb nodes"
+// +kubebuilder:printcolumn:name="CPU",type="string",JSONPath=".status.cpuNodeCount",description="Number of CPU nodes"
+// +kubebuilder:printcolumn:name="GPU",type="string",JSONPath=".status.gpuNodeCount",description="Number of GPU nodes"
+// +kubebuilder:printcolumn:name="Login",type="string",JSONPath=".status.loginNodeCount",description="Number of Login nodes"
+// +kubebuilder:printcolumn:name="Ctld",type="string",JSONPath=".status.ctldNodeCount",description="Number of Ctld nodes"
+// +kubebuilder:printcolumn:name="DBd",type="string",JSONPath=".status.databaseDeamonCount",description="Number of Db nodes"
+// +kubebuilder:printcolumn:name="DBsvc",type="string",JSONPath=".status.mariadbServiceCount",description="Number of mariadb nodes"
 // +kubebuilder:printcolumn:name="Job Command",type="string",JSONPath=".status.jobCommand",description="Current job command"
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.clusterStatus",description="Cluster status"
 
 // SlurmDeployment is the Schema for the slurmdeployments API.
 type SlurmDeployment struct {

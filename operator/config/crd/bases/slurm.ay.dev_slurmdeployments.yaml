@@ -21,30 +21,34 @@ spec:
     - description: Number of CPU nodes
       jsonPath: .status.cpuNodeCount
       name: CPU
-      type: integer
+      type: string
     - description: Number of GPU nodes
       jsonPath: .status.gpuNodeCount
       name: GPU
-      type: integer
+      type: string
     - description: Number of Login nodes
       jsonPath: .status.loginNodeCount
       name: Login
-      type: integer
+      type: string
     - description: Number of Ctld nodes
       jsonPath: .status.ctldNodeCount
       name: Ctld
-      type: integer
+      type: string
     - description: Number of Db nodes
       jsonPath: .status.databaseDeamonCount
       name: DBd
-      type: integer
+      type: string
     - description: Number of mariadb nodes
       jsonPath: .status.mariadbServiceCount
       name: DBsvc
-      type: integer
+      type: string
     - description: Current job command
       jsonPath: .status.jobCommand
       name: Job Command
+      type: string
+    - description: Cluster status
+      jsonPath: .status.clusterStatus
+      name: Status
       type: string
     name: v1
     schema:
@@ -1046,6 +1050,8 @@ spec:
           status:
             description: SlurmDeploymentStatus defines the observed state of SlurmDeployment.
             properties:
+              clusterStatus:
+                type: string
               cpuNodeCount:
                 description: |-
                   INSERT ADDITIONAL STATUS FIELD - define observed state of cluster

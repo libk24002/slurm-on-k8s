@@ -36,7 +36,7 @@ make install
 You can apply the samples (examples) from the config/sample:
 
 ```sh
-kubectl apply -f config/samples/slurm_v1_slurmdeployment.simple.yaml
+kubectl apply -f config/samples/slurm_v1_slurmdeployment.lensing.yaml
 kubectl apply -f config/samples/slurm_v1_slurmdeployment.yaml
 ```
 

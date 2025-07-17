@@ -186,30 +186,54 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 // UpdateReleaseStatus updates the SlurmDeployment status with node counts and saves to Kubernetes
 func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, release *slurmv1.SlurmDeployment) (ctrl.Result, error) {
-	cpuSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmd-cpu")
+	if cpuSTS, cpuSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
+		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmd-cpu")); cpuSTSErr == nil {
+		release.Status.CPUNodeCount = fmt.Sprintf("%d/%d", cpuSTS.Status.ReadyReplicas, cpuSTS.Status.Replicas)
+	} else {
+		log.Printf("Error retrieving CPU Node StatefulSet: %v", cpuSTSErr)
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, cpuSTSErr
+	}
 
-	gpuSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmd-gpu")
+	if gpuSTS, gpuSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
+		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmd-gpu")); gpuSTSErr == nil {
+		release.Status.GPUNodeCount = fmt.Sprintf("%d/%d", gpuSTS.Status.ReadyReplicas, gpuSTS.Status.Replicas)
+	} else {
+		log.Printf("Error retrieving GPU Node StatefulSet: %v", gpuSTSErr)
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, gpuSTSErr
+	}
 
-	controldSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmctld")
+	if controldSTS, controldSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
+		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmctld")); controldSTSErr == nil {
+		release.Status.ControldDeamonCount = fmt.Sprintf("%d/%d", controldSTS.Status.ReadyReplicas, controldSTS.Status.Replicas)
+	} else {
+		log.Printf("Error retrieving control deamon StatefulSet: %v", controldSTSErr)
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, controldSTSErr
+	}
 
-	databasedSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-slurmdbd")
+	if databasedSTS, databasedSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
+		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmdbd")); databasedSTSErr == nil {
+		release.Status.DatabaseDeamonCount = fmt.Sprintf("%d/%d", databasedSTS.Status.ReadyReplicas, databasedSTS.Status.Replicas)
+	} else {
+		log.Printf("Error retrieving database deamon StatefulSet: %v", databasedSTSErr)
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, databasedSTSErr
+	}
 
-	mariadbSTS, _ := r.RetrieveStatefulSetInfo(ctx, release, "-mariadb")
+	if mariadbSTS, mariadbSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
+		fmt.Sprintf("%s-%s", release.Name, "mariadb")); mariadbSTSErr == nil {
+		release.Status.MariadbServiceCount = fmt.Sprintf("%d/%d", mariadbSTS.Status.ReadyReplicas, mariadbSTS.Status.Replicas)
+	} else {
+		log.Printf("Error retrieving MariaDB StatefulSet: %v", mariadbSTSErr)
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, mariadbSTSErr
+	}
 
-	loginNodeDeploy, _ := r.RetrieveDeployInfo(ctx, release, "-login")
+	if loginNodeDeploy, loginNodeDeployErr := r.RetrieveDeployInfo(ctx, release.Spec.Chart.Namespace,
+		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "login")); loginNodeDeployErr == nil {
+		release.Status.LoginNodeCount = fmt.Sprintf("%d/%d", loginNodeDeploy.Status.AvailableReplicas, loginNodeDeploy.Status.Replicas)
+	} else {
+		log.Printf("Error retrieving login Node Deployment: %v", loginNodeDeployErr)
+		return ctrl.Result{RequeueAfter: 5 * time.Second}, loginNodeDeployErr
+	}
 
-	// Update CPU node count
-	release.Status.CPUNodeCount = fmt.Sprintf("%d/%d", cpuSTS.Status.ReadyReplicas, cpuSTS.Status.Replicas)
-	// Update GPU node count
-	release.Status.GPUNodeCount = fmt.Sprintf("%d/%d", gpuSTS.Status.ReadyReplicas, gpuSTS.Status.Replicas)
-	// Update controld node count
-	release.Status.ControldDeamonCount = fmt.Sprintf("%d/%d", controldSTS.Status.ReadyReplicas, controldSTS.Status.Replicas)
-	// Update database node count
-	release.Status.DatabaseDeamonCount = fmt.Sprintf("%d/%d", databasedSTS.Status.ReadyReplicas, databasedSTS.Status.Replicas)
-	// Update maridb node count
-	release.Status.MariadbServiceCount = fmt.Sprintf("%d/%d", mariadbSTS.Status.ReadyReplicas, mariadbSTS.Status.Replicas)
-	// Update login node count
-	release.Status.LoginNodeCount = fmt.Sprintf("%d/%d", loginNodeDeploy.Status.AvailableReplicas, loginNodeDeploy.Status.Replicas)
 	// Show the command
 	release.Status.JobCommand = strings.Join(append(release.Spec.Job.Command, release.Spec.Job.Args...), " ")
 
@@ -247,11 +271,11 @@ func (r *SlurmDeploymentReconciler) CreateNamespaceIfNotExist(ctx context.Contex
 	return ctrl.Result{}, nil
 }
 
-func (r *SlurmDeploymentReconciler) RetrieveStatefulSetInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (appsv1.StatefulSet, error) {
+func (r *SlurmDeploymentReconciler) RetrieveStatefulSetInfo(ctx context.Context, namespace string, statefulSetName string) (appsv1.StatefulSet, error) {
 	sts := &appsv1.StatefulSet{}
 	if k8sGetInfoErr := r.Client.Get(ctx, types.NamespacedName{
-		Name:      release.Name + suffix,
-		Namespace: release.Spec.Chart.Namespace,
+		Name:      statefulSetName,
+		Namespace: namespace,
 	}, sts); k8sGetInfoErr != nil {
 		log.Printf("Failed to get StatefulSet: %v", k8sGetInfoErr)
 		return *sts, k8sGetInfoErr
@@ -259,11 +283,11 @@ func (r *SlurmDeploymentReconciler) RetrieveStatefulSetInfo(ctx context.Context,
 	return *sts, nil
 }
 
-func (r *SlurmDeploymentReconciler) RetrieveDeployInfo(ctx context.Context, release *slurmv1.SlurmDeployment, suffix string) (appsv1.Deployment, error) {
+func (r *SlurmDeploymentReconciler) RetrieveDeployInfo(ctx context.Context, namespace string, deployName string) (appsv1.Deployment, error) {
 	deploy := &appsv1.Deployment{}
 	if k8sGetInfoErr := r.Client.Get(ctx, types.NamespacedName{
-		Name:      release.Name + suffix,
-		Namespace: release.Spec.Chart.Namespace,
+		Name:      deployName,
+		Namespace: namespace,
 	}, deploy); k8sGetInfoErr != nil {
 		log.Printf("Failed to get Deployment : %v", k8sGetInfoErr)
 		return *deploy, k8sGetInfoErr

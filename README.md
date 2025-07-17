@@ -30,7 +30,7 @@ Slurm on Kubernetes provides the following features:
         ```
     2. install slurm chart
         ```
-        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.7
+        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.9
         ```
 - for artifact helm user
     1.  get helm repo and update
@@ -39,7 +39,7 @@ Slurm on Kubernetes provides the following features:
         ```
     2. install slurm chart
         ```shell
-        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.7
+        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.9
         ```
     Or you can get template values.yaml from [link](https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurm.values.yaml)
 - for opertaor user

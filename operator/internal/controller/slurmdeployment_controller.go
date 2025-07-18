@@ -188,11 +188,10 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // UpdateReleaseStatus updates the SlurmDeployment status with node counts and saves to Kubernetes
 func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, release *slurmv1.SlurmDeployment) (ctrl.Result, error) {
 	needRestartSlurmctldFlag := false
-	slurmctldSTSLabels := map[string]string{}
+	var slurmctldSTSLabels map[string]string
 	if cpuSTS, cpuSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
 		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmd-cpu")); cpuSTSErr == nil {
 		release.Status.CPUNodeCount = fmt.Sprintf("%d/%d", cpuSTS.Status.ReadyReplicas, cpuSTS.Status.Replicas)
-		log.Printf("---> CPU Node StatefulSet status updated: %s", release.Status.CPUNodeCount)
 		if release.Status.CPUNodeStsVersion != cpuSTS.ResourceVersion {
 			needRestartSlurmctldFlag = true
 			release.Status.CPUNodeStsVersion = cpuSTS.ResourceVersion
@@ -258,7 +257,6 @@ func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, rel
 
 	if needRestartSlurmctldFlag {
 		// Restart slurmctld
-		log.Printf("------------------------------Need to restart slurmctld pods")
 		pods := &corev1.PodList{}
 		if listPodErr := r.List(ctx, pods, []client.ListOption{
 			client.InNamespace(release.Spec.Chart.Namespace),

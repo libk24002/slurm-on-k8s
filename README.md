@@ -49,7 +49,7 @@ Slurm on Kubernetes provides the following features:
         ```
     2. deploy slurm operator
         ```
-        kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/operator_install.yaml
+        kubectl apply -f https://raw.githubusercontent.com/AaronYang0628/slurm-on-k8s/refs/heads/main/operator/dist/install.yaml
         ```
     3. apply CRD slurmdeployment 
         ```

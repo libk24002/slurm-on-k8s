@@ -1056,11 +1056,15 @@ spec:
                   INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
                   Important: Run "make" to regenerate code after modifying this file
                 type: string
+              cpuNodeStsVersion:
+                type: string
               ctldNodeCount:
                 type: string
               databaseDeamonCount:
                 type: string
               gpuNodeCount:
+                type: string
+              gpuNodeStsVersion:
                 type: string
               jobCommand:
                 type: string
@@ -1068,6 +1072,9 @@ spec:
                 type: string
               mariadbServiceCount:
                 type: string
+            required:
+            - cpuNodeStsVersion
+            - gpuNodeStsVersion
             type: object
         type: object
     served: true

@@ -337,7 +337,9 @@ type SlurmDeploymentStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	CPUNodeCount        string `json:"cpuNodeCount,omitempty"`
+	CPUNodeStsVersion   string `json:"cpuNodeStsVersion"`
 	GPUNodeCount        string `json:"gpuNodeCount,omitempty"`
+	GPUNodeStsVersion   string `json:"gpuNodeStsVersion"`
 	LoginNodeCount      string `json:"loginNodeCount,omitempty"`
 	ControldDeamonCount string `json:"ctldNodeCount,omitempty"`
 	DatabaseDeamonCount string `json:"databaseDeamonCount,omitempty"`

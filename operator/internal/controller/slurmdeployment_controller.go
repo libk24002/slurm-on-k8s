@@ -56,8 +56,9 @@ type SlurmDeploymentReconciler struct {
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;create;update;patch;delete
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;create;update;patch;delete;watch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;create;update;patch;delete;watch
-// +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=get;list;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments;statefulsets,verbs=get;list;create;update;patch;delete;watch
 // +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;create;update;patch;delete
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=get;list;create;update;patch;delete
@@ -186,9 +187,16 @@ func (r *SlurmDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 // UpdateReleaseStatus updates the SlurmDeployment status with node counts and saves to Kubernetes
 func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, release *slurmv1.SlurmDeployment) (ctrl.Result, error) {
+	needRestartSlurmctldFlag := false
+	slurmctldSTSLabels := map[string]string{}
 	if cpuSTS, cpuSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
 		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmd-cpu")); cpuSTSErr == nil {
 		release.Status.CPUNodeCount = fmt.Sprintf("%d/%d", cpuSTS.Status.ReadyReplicas, cpuSTS.Status.Replicas)
+		log.Printf("---> CPU Node StatefulSet status updated: %s", release.Status.CPUNodeCount)
+		if release.Status.CPUNodeStsVersion != cpuSTS.ResourceVersion {
+			needRestartSlurmctldFlag = true
+			release.Status.CPUNodeStsVersion = cpuSTS.ResourceVersion
+		}
 	} else {
 		log.Printf("Error retrieving CPU Node StatefulSet: %v", cpuSTSErr)
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, cpuSTSErr
@@ -197,6 +205,10 @@ func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, rel
 	if gpuSTS, gpuSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
 		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmd-gpu")); gpuSTSErr == nil {
 		release.Status.GPUNodeCount = fmt.Sprintf("%d/%d", gpuSTS.Status.ReadyReplicas, gpuSTS.Status.Replicas)
+		if release.Status.GPUNodeStsVersion != gpuSTS.ResourceVersion {
+			needRestartSlurmctldFlag = true
+			release.Status.GPUNodeStsVersion = gpuSTS.ResourceVersion
+		}
 	} else {
 		log.Printf("Error retrieving GPU Node StatefulSet: %v", gpuSTSErr)
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, gpuSTSErr
@@ -205,6 +217,7 @@ func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, rel
 	if controldSTS, controldSTSErr := r.RetrieveStatefulSetInfo(ctx, release.Spec.Chart.Namespace,
 		fmt.Sprintf("%s-%s-%s", release.Name, release.Spec.Chart.Name, "slurmctld")); controldSTSErr == nil {
 		release.Status.ControldDeamonCount = fmt.Sprintf("%d/%d", controldSTS.Status.ReadyReplicas, controldSTS.Status.Replicas)
+		slurmctldSTSLabels = controldSTS.Spec.Selector.MatchLabels
 	} else {
 		log.Printf("Error retrieving control deamon StatefulSet: %v", controldSTSErr)
 		return ctrl.Result{RequeueAfter: 5 * time.Second}, controldSTSErr
@@ -241,6 +254,29 @@ func (r *SlurmDeploymentReconciler) UpdateReleaseStatus(ctx context.Context, rel
 	if updateStatusErr := r.Status().Update(ctx, release); updateStatusErr != nil {
 		log.Printf("Failed to update status: %v", updateStatusErr)
 		return ctrl.Result{}, updateStatusErr
+	}
+
+	if needRestartSlurmctldFlag {
+		// Restart slurmctld
+		log.Printf("------------------------------Need to restart slurmctld pods")
+		pods := &corev1.PodList{}
+		if listPodErr := r.List(ctx, pods, []client.ListOption{
+			client.InNamespace(release.Spec.Chart.Namespace),
+			client.MatchingLabels(slurmctldSTSLabels),
+		}...); listPodErr != nil {
+			log.Printf("Failed to list slurmctld pods: %v", listPodErr)
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, listPodErr
+		}
+		for _, pod := range pods.Items {
+			if err := r.Delete(ctx, &pod); err != nil {
+				if !apierrors.IsNotFound(err) {
+					log.Printf("Failed to delete pod %s: %v", pod.Name, err)
+					return ctrl.Result{RequeueAfter: 5 * time.Second}, err
+				}
+			} else {
+				log.Printf("Deleted pod %s to restart slurmctld", pod.Name)
+			}
+		}
 	}
 	return ctrl.Result{}, nil
 }
@@ -302,5 +338,6 @@ func (r *SlurmDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&slurmv1.SlurmDeployment{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&corev1.Pod{}).
 		Complete(r)
 }

@@ -68,6 +68,7 @@ Slurm on Kubernetes provides the following features:
         ```
     3. build and push your operator
         ```shell
+        make build-installer IMG=ghcr.io/aaronyang0628/slurm-operator:25.05
         make docker-build docker-push IMG=ghcr.io/aaronyang0628/slurm-operator:25.05
         ```
     4. deploy your operator

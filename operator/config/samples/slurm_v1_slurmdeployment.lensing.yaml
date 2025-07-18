@@ -54,11 +54,16 @@ spec:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-login
         tag: 25.05-open-mpi
-    slurmdGPU:
-      replicaCount: 2
+    slurmdCPU:
+      replicaCount: 1
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmd
         tag: 25.05-open-mpi
-
+      resources: 
+        requests:
+          core: 1
+          cpu: 500m
+          ephemeral-storage: 10Gi
+          memory: 1Gi
   

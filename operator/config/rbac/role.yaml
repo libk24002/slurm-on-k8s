@@ -23,6 +23,7 @@ rules:
   - ""
   resources:
   - namespaces
+  - pods
   verbs:
   - create
   - delete
@@ -43,6 +44,7 @@ rules:
   - list
   - patch
   - update
+  - watch
 - apiGroups:
   - batch
   resources:

@@ -139,7 +139,7 @@ slurmdCPU:
     tag: "25.05-open-mpi"
     pullPolicy: IfNotPresent
     pullSecrets: []
-  replicaCount: 2
+  replicaCount: 0
   automountServiceAccountToken: false
   podLabels: {}
   affinity: {}

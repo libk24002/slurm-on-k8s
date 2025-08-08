@@ -109,8 +109,9 @@ spec:
         pullSecrets: []
       resources: 
         requests:
-          core: 1
-          cpu: 500m
+          socket: 1
+          core-per-socket: 1
+          thread-per-core: 1
           ephemeral-storage: 10Gi
           memory: 1Gi
       nodeSelector: {}
@@ -131,8 +132,9 @@ spec:
         pullSecrets: []
       resources: 
         requests:
-          core: 1
-          cpu: 500m
+          socket: 1
+          core-per-socket: 1
+          thread-per-core: 1
           ephemeral-storage: 10Gi
           memory: 1Gi
       nodeSelector: {}

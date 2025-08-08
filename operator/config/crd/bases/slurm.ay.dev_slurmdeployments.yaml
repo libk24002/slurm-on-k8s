@@ -288,10 +288,6 @@ spec:
                         properties:
                           limits:
                             properties:
-                              core:
-                                default: 1
-                                format: int32
-                                type: integer
                               cpu:
                                 default: 3000m
                                 type: string
@@ -308,10 +304,6 @@ spec:
                             type: object
                           requests:
                             properties:
-                              core:
-                                default: 1
-                                format: int32
-                                type: integer
                               cpu:
                                 default: 500m
                                 type: string
@@ -622,10 +614,6 @@ spec:
                         properties:
                           limits:
                             properties:
-                              core:
-                                default: 1
-                                format: int32
-                                type: integer
                               cpu:
                                 default: 3000m
                                 type: string
@@ -642,10 +630,6 @@ spec:
                             type: object
                           requests:
                             properties:
-                              core:
-                                default: 1
-                                format: int32
-                                type: integer
                               cpu:
                                 default: 500m
                                 type: string
@@ -761,41 +745,49 @@ spec:
                         properties:
                           limits:
                             properties:
-                              core:
+                              core-per-socket:
                                 default: 1
                                 format: int32
                                 type: integer
-                              cpu:
-                                default: 3000m
-                                type: string
                               ephemeral-storage:
                                 default: 8Gi
                                 type: string
                               memory:
                                 default: 2Gi
                                 type: string
+                              socket:
+                                default: 1
+                                format: int32
+                                type: integer
+                              thread-per-core:
+                                default: 1
+                                format: int32
+                                type: integer
                             required:
-                            - cpu
                             - ephemeral-storage
                             - memory
                             type: object
                           requests:
                             properties:
-                              core:
+                              core-per-socket:
                                 default: 1
                                 format: int32
                                 type: integer
-                              cpu:
-                                default: 500m
-                                type: string
                               ephemeral-storage:
                                 default: 2Gi
                                 type: string
                               memory:
                                 default: 1Gi
                                 type: string
+                              socket:
+                                default: 1
+                                format: int32
+                                type: integer
+                              thread-per-core:
+                                default: 1
+                                format: int32
+                                type: integer
                             required:
-                            - cpu
                             - ephemeral-storage
                             - memory
                             type: object
@@ -900,41 +892,49 @@ spec:
                         properties:
                           limits:
                             properties:
-                              core:
+                              core-per-socket:
                                 default: 1
                                 format: int32
                                 type: integer
-                              cpu:
-                                default: 3000m
-                                type: string
                               ephemeral-storage:
                                 default: 8Gi
                                 type: string
                               memory:
                                 default: 2Gi
                                 type: string
+                              socket:
+                                default: 1
+                                format: int32
+                                type: integer
+                              thread-per-core:
+                                default: 1
+                                format: int32
+                                type: integer
                             required:
-                            - cpu
                             - ephemeral-storage
                             - memory
                             type: object
                           requests:
                             properties:
-                              core:
+                              core-per-socket:
                                 default: 1
                                 format: int32
                                 type: integer
-                              cpu:
-                                default: 500m
-                                type: string
                               ephemeral-storage:
                                 default: 2Gi
                                 type: string
                               memory:
                                 default: 1Gi
                                 type: string
+                              socket:
+                                default: 1
+                                format: int32
+                                type: integer
+                              thread-per-core:
+                                default: 1
+                                format: int32
+                                type: integer
                             required:
-                            - cpu
                             - ephemeral-storage
                             - memory
                             type: object

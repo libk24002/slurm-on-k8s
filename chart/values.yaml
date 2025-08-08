@@ -1,5 +1,4 @@
 mariadb:
-  enabled: true
   port: 3306
   auth:
     rootPassword: "password-for-root"
@@ -11,6 +10,9 @@ mariadb:
       enabled: false
       storageClass: ""
       size: 2Gi
+  image:
+    registry: m.daocloud.io/docker.io
+    repository: bitnami/mariadb
 auth:
   ssh:
     secret:

@@ -180,7 +180,7 @@ type SlurmdCPUSpec struct {
 	Image        ImageSpec `json:"image"`
 	// +kubebuilder:default=0
 	ReplicaCount       int32                   `json:"replicaCount"`
-	Resources          ResourceSpec            `json:"resources,omitempty"`
+	Resources          SlurmdResourceSpec      `json:"resources,omitempty"`
 	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
 	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
 	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
@@ -195,7 +195,7 @@ type SlurmdGPUSpec struct {
 	Image        ImageSpec `json:"image"`
 	// +kubebuilder:default=0
 	ReplicaCount       int32                   `json:"replicaCount"`
-	Resources          ResourceSpec            `json:"resources,omitempty"`
+	Resources          SlurmdResourceSpec      `json:"resources,omitempty"`
 	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
 	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
 	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
@@ -203,14 +203,43 @@ type SlurmdGPUSpec struct {
 	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
+type SlurmdResourceSpec struct {
+	Requests *SlurmdResourceRequestSpec `json:"requests,omitempty"`
+	Limits   *SlurmdResourceLimitSpec   `json:"limits,omitempty"`
+}
+
 type ResourceSpec struct {
 	Requests *ResourceRequestSpec `json:"requests,omitempty"`
 	Limits   *ResourceLimitSpec   `json:"limits,omitempty"`
 }
 
-type ResourceRequestSpec struct {
+type SlurmdResourceRequestSpec struct {
 	// +kubebuilder:default=1
-	Core int32 `json:"core,omitempty"`
+	Socket int32 `json:"socket,omitempty"`
+	// +kubebuilder:default=1
+	CorePerSocket int32 `json:"core-per-socket,omitempty"`
+	// +kubebuilder:default=1
+	ThreadPerCore int32 `json:"thread-per-core,omitempty"`
+	// +kubebuilder:default="1Gi"
+	Memory string `json:"memory"`
+	// +kubebuilder:default="2Gi"
+	EphemeralStorage string `json:"ephemeral-storage"`
+}
+
+type SlurmdResourceLimitSpec struct {
+	// +kubebuilder:default=1
+	Socket int32 `json:"socket,omitempty"`
+	// +kubebuilder:default=1
+	CorePerSocket int32 `json:"core-per-socket,omitempty"`
+	// +kubebuilder:default=1
+	ThreadPerCore int32 `json:"thread-per-core,omitempty"`
+	// +kubebuilder:default="2Gi"
+	Memory string `json:"memory"`
+	// +kubebuilder:default="8Gi"
+	EphemeralStorage string `json:"ephemeral-storage"`
+}
+
+type ResourceRequestSpec struct {
 	// +kubebuilder:default="500m"
 	CPU string `json:"cpu"`
 	// +kubebuilder:default="1Gi"
@@ -220,8 +249,6 @@ type ResourceRequestSpec struct {
 }
 
 type ResourceLimitSpec struct {
-	// +kubebuilder:default=1
-	Core int32 `json:"core,omitempty"`
 	// +kubebuilder:default="3000m"
 	CPU string `json:"cpu"`
 	// +kubebuilder:default="2Gi"

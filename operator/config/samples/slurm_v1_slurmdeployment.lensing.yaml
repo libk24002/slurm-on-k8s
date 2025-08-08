@@ -62,8 +62,9 @@ spec:
         tag: 25.05-open-mpi
       resources: 
         requests:
-          core: 1
-          cpu: 500m
+          socket: 2
+          core-per-socket: 2
+          thread-per-core: 2
           ephemeral-storage: 10Gi
-          memory: 1Gi
+          memory: 8Gi
   

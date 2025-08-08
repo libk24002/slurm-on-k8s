@@ -1,11 +1,41 @@
 package utils
 
 import (
+	"bufio"
 	"fmt"
-	os_runtime "runtime"
+	"os"
+	"strings"
 
 	slurmv1 "github.com/AaronYang0628/slurm-on-k8s/api/v1"
 )
+
+func GetLocalCPUInfo(prefix string) (int32, error) {
+	// open /proc/cpuinfo
+	file, err := os.Open("/proc/cpuinfo")
+	if err != nil {
+		return 0, fmt.Errorf("Cannot read /proc/cpuinfo: %v", err)
+	}
+	defer file.Close()
+	physicalIDs := make(map[string]bool)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, prefix) {
+			parts := strings.Split(line, ":")
+			if len(parts) >= 2 {
+				physicalID := strings.TrimSpace(parts[1])
+				physicalIDs[physicalID] = true
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return 0, fmt.Errorf("Failed to read /proc/cpuinfo: %v", err)
+	}
+
+	return int32(len(physicalIDs)), nil
+}
 
 func BuildSlurmValues(valuesSpec *slurmv1.ValuesSpec) map[string]interface{} {
 	if valuesSpec.CommonAnnotations == nil {
@@ -26,13 +56,11 @@ func BuildSlurmValues(valuesSpec *slurmv1.ValuesSpec) map[string]interface{} {
 	if valuesSpec.Slurmctld.Resources == nil {
 		valuesSpec.Slurmctld.Resources = &slurmv1.ResourceSpec{
 			Requests: &slurmv1.ResourceRequestSpec{
-				Core:             8,
 				CPU:              "1000m",
 				Memory:           "1Gi",
 				EphemeralStorage: "10Gi",
 			},
 			Limits: &slurmv1.ResourceLimitSpec{
-				Core:             8,
 				CPU:              "2000m",
 				Memory:           "2Gi",
 				EphemeralStorage: "20Gi",
@@ -41,32 +69,80 @@ func BuildSlurmValues(valuesSpec *slurmv1.ValuesSpec) map[string]interface{} {
 	}
 
 	if valuesSpec.SlurmdCPU.Resources.Limits == nil {
-		valuesSpec.SlurmdCPU.Resources.Limits = &slurmv1.ResourceLimitSpec{
-			CPU:              "2000m",
+		sockets, err := GetLocalCPUInfo("physical id")
+		if err != nil {
+			sockets = 1
+		}
+
+		cores, err2 := GetLocalCPUInfo("cpu cores")
+		if err2 != nil {
+			cores = 1
+		}
+
+		valuesSpec.SlurmdCPU.Resources.Limits = &slurmv1.SlurmdResourceLimitSpec{
+			Socket:           sockets,
+			CorePerSocket:    cores,
+			ThreadPerCore:    1,
 			Memory:           "8Gi",
 			EphemeralStorage: "20Gi",
 		}
 	}
 
 	if valuesSpec.SlurmdCPU.Resources.Requests == nil {
-		valuesSpec.SlurmdCPU.Resources.Requests = &slurmv1.ResourceRequestSpec{
-			CPU:              "1000m",
+		sockets, err := GetLocalCPUInfo("physical id")
+		if err != nil {
+			sockets = 1
+		}
+
+		cores, err2 := GetLocalCPUInfo("cpu cores")
+		if err2 != nil {
+			cores = 1
+		}
+
+		valuesSpec.SlurmdCPU.Resources.Requests = &slurmv1.SlurmdResourceRequestSpec{
+			Socket:           sockets,
+			CorePerSocket:    cores,
+			ThreadPerCore:    1,
 			Memory:           "1Gi",
 			EphemeralStorage: "2Gi",
 		}
 	}
 
 	if valuesSpec.SlurmdGPU.Resources.Limits == nil {
-		valuesSpec.SlurmdGPU.Resources.Limits = &slurmv1.ResourceLimitSpec{
-			CPU:              "2000m",
+		sockets, err := GetLocalCPUInfo("physical id")
+		if err != nil {
+			sockets = 1
+		}
+
+		cores, err2 := GetLocalCPUInfo("cpu cores")
+		if err2 != nil {
+			cores = 1
+		}
+
+		valuesSpec.SlurmdGPU.Resources.Limits = &slurmv1.SlurmdResourceLimitSpec{
+			Socket:           sockets,
+			CorePerSocket:    cores,
+			ThreadPerCore:    1,
 			Memory:           "8Gi",
 			EphemeralStorage: "20Gi",
 		}
 	}
 
 	if valuesSpec.SlurmdGPU.Resources.Requests == nil {
-		valuesSpec.SlurmdGPU.Resources.Requests = &slurmv1.ResourceRequestSpec{
-			CPU:              "1000m",
+		sockets, err := GetLocalCPUInfo("physical id")
+		if err != nil {
+			sockets = 1
+		}
+
+		cores, err2 := GetLocalCPUInfo("cpu cores")
+		if err2 != nil {
+			cores = 1
+		}
+
+		valuesSpec.SlurmdGPU.Resources.Requests = &slurmv1.SlurmdResourceRequestSpec{
+			Socket:           sockets,
+			CorePerSocket:    cores,
+			ThreadPerCore:    1,
 			Memory:           "1Gi",
 			EphemeralStorage: "2Gi",
 		}
@@ -86,14 +162,6 @@ func BuildSlurmValues(valuesSpec *slurmv1.ValuesSpec) map[string]interface{} {
 			Memory:           "1Gi",
 			EphemeralStorage: "2Gi",
 		}
-	}
-
-	if valuesSpec.SlurmdCPU.Resources.Requests.Core == 0 {
-		valuesSpec.SlurmdCPU.Resources.Requests.Core = int32(os_runtime.NumCPU())
-	}
-
-	if valuesSpec.SlurmdGPU.Resources.Requests.Core == 0 {
-		valuesSpec.SlurmdGPU.Resources.Requests.Core = int32(os_runtime.NumCPU())
 	}
 
 	values := map[string]interface{}{
@@ -328,12 +396,12 @@ func BuildSlurmValues(valuesSpec *slurmv1.ValuesSpec) map[string]interface{} {
 			"lifecycleHooks": map[string]string{},
 			"resources": map[string]interface{}{
 				"requests": map[string]string{
-					"cpu":               valuesSpec.SlurmdCPU.Resources.Requests.CPU,
+					"cpu":               fmt.Sprintf("%dm", valuesSpec.SlurmdCPU.Resources.Requests.Socket*valuesSpec.SlurmdCPU.Resources.Requests.CorePerSocket*valuesSpec.SlurmdCPU.Resources.Requests.ThreadPerCore*1000),
 					"memory":            valuesSpec.SlurmdCPU.Resources.Requests.Memory,
 					"ephemeral-storage": valuesSpec.SlurmdCPU.Resources.Requests.EphemeralStorage,
 				},
 				"limits": map[string]string{
-					"cpu":               valuesSpec.SlurmdCPU.Resources.Limits.CPU,
+					"cpu":               fmt.Sprintf("%dm", valuesSpec.SlurmdCPU.Resources.Limits.Socket*valuesSpec.SlurmdCPU.Resources.Limits.CorePerSocket*valuesSpec.SlurmdCPU.Resources.Limits.ThreadPerCore*1000),
 					"memory":            valuesSpec.SlurmdCPU.Resources.Limits.Memory,
 					"ephemeral-storage": valuesSpec.SlurmdCPU.Resources.Limits.EphemeralStorage,
 				},
@@ -433,12 +501,12 @@ func BuildSlurmValues(valuesSpec *slurmv1.ValuesSpec) map[string]interface{} {
 			"lifecycleHooks": map[string]string{},
 			"resources": map[string]interface{}{
 				"requests": map[string]string{
-					"cpu":               valuesSpec.SlurmdGPU.Resources.Requests.CPU,
+					"cpu":               fmt.Sprintf("%dm", valuesSpec.SlurmdGPU.Resources.Requests.Socket*valuesSpec.SlurmdGPU.Resources.Requests.CorePerSocket*valuesSpec.SlurmdGPU.Resources.Requests.ThreadPerCore*1000),
 					"memory":            valuesSpec.SlurmdGPU.Resources.Requests.Memory,
 					"ephemeral-storage": valuesSpec.SlurmdGPU.Resources.Requests.EphemeralStorage,
 				},
 				"limits": map[string]string{
-					"cpu":               valuesSpec.SlurmdGPU.Resources.Limits.CPU,
+					"cpu":               fmt.Sprintf("%dm", valuesSpec.SlurmdGPU.Resources.Limits.Socket*valuesSpec.SlurmdGPU.Resources.Limits.CorePerSocket*valuesSpec.SlurmdGPU.Resources.Limits.ThreadPerCore*1000),
 					"memory":            valuesSpec.SlurmdGPU.Resources.Limits.Memory,
 					"ephemeral-storage": valuesSpec.SlurmdGPU.Resources.Limits.EphemeralStorage,
 				},
@@ -726,8 +794,8 @@ SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
 SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
-NodeName={{ include "slurm.fullname" . }}-slurmd-cpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.ReplicaCount+10) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdCPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
-NodeName={{ include "slurm.fullname" . }}-slurmd-gpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.ReplicaCount+10) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Core) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Core) + ` ThreadsPerCore=1 RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdGPU.Resources.Requests.Memory)) + ` Procs=1 State=UNKNOWN
+NodeName={{ include "slurm.fullname" . }}-slurmd-cpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.ReplicaCount+10) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Socket*valuesSpec.SlurmdCPU.Resources.Requests.CorePerSocket*valuesSpec.SlurmdCPU.Resources.Requests.ThreadPerCore) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.CorePerSocket) + ` ThreadsPerCore=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.ThreadPerCore) + ` RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdCPU.Resources.Requests.Memory)) + ` State=UNKNOWN
+NodeName={{ include "slurm.fullname" . }}-slurmd-gpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.ReplicaCount+10) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Socket*valuesSpec.SlurmdGPU.Resources.Requests.CorePerSocket*valuesSpec.SlurmdGPU.Resources.Requests.ThreadPerCore) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.CorePerSocket) + ` ThreadsPerCore=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.ThreadPerCore) + ` RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdGPU.Resources.Requests.Memory)) + ` State=UNKNOWN
 PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP`,
 			"slurmdbdConf": `AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2

@@ -174,7 +174,7 @@ slurmdCPU:
   terminationGracePeriodSeconds: ""
   hostAliases: []
   diagnosticMode:
-    enabled: true
+    enabled: false
     command: ["/bin/sh"]
     args: ["-c", "sleep 1d"]
   extraEnvVars: []

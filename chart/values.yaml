@@ -170,8 +170,8 @@ slurmdCPU:
   hostAliases: []
   diagnosticMode:
     enabled: false
-    command: []
-    args: []
+    command: ["/bin/sh"]
+    args: ["-c", "sleep 1d"]
   extraEnvVars: []
   extraEnvVarsCM: ""
   extraEnvVarsSecret: ""
@@ -525,7 +525,6 @@ configuration:
     JobAcctGatherFrequency=30
     SlurmctldDebug=info
     SlurmctldLogFile=/var/log/slurm/slurmctld.log
-    SlurmdDebug=info
     SlurmdLogFile=/var/log/slurm/slurmd.log
     NodeName={{ include "slurm.fullname" . }}-slurmd-cpu-[0-99] CPUs=2 Sockets=1 CoresPerSocket=2 ThreadsPerCore=1 RealMemory=2048 State=UNKNOWN
     NodeName={{ include "slurm.fullname" . }}-slurmd-gpu-[0-99] CPUs=8 Sockets=1 CoresPerSocket=2 ThreadsPerCore=4 RealMemory=2048 State=UNKNOWN

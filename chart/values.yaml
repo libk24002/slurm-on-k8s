@@ -486,15 +486,19 @@ configuration:
   cgroup:
     name: cgroup-conf
     value: |-
+      CgroupPlugin=autodetect
+      IgnoreSystemd=yes
+      IgnoreSystemdOnFailure=yes
       ConstrainCores=yes
       ConstrainDevices=yes
       ConstrainRAMSpace=yes
       ConstrainSwapSpace=no
   slurmConf: |-
+    DebugFlags=cgroup
+    SlurmdDebug=debug
     ClusterName=slurm-cluster
     SlurmctldHost={{ include "slurm.fullname" . }}-{{ .Values.slurmctld.name }}-0
     MpiDefault=pmi2
-    ProctrackType=proctrack/cgroup
     ReturnToService=1
     SlurmctldPidFile=/var/run/slurmctld.pid
     SlurmctldPort={{ .Values.slurmctld.service.slurmctld.port }}
@@ -504,6 +508,7 @@ configuration:
     SlurmUser=slurm
     StateSaveLocation=/var/spool/slurmctld
     TaskPlugin=task/affinity,task/cgroup
+    ProctrackType=proctrack/cgroup
     InactiveLimit=0
     KillWait=30
     MinJobAge=300

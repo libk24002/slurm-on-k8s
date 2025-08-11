@@ -18,6 +18,7 @@ Slurm on Kubernetes provides the following features:
 - **Customizable**: Using [values.yaml](https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurm.values.yaml) file, you can customizable a slurm cluster, fitting specific needs and configurations.
 - **Separated munged daemon**
 - **Support GPU nodes deployment**
+- **Running on Cgroup v1/v2**
 
 ### Usage
 
@@ -30,7 +31,7 @@ Slurm on Kubernetes provides the following features:
         ```
     2. install slurm chart
         ```
-        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.9
+        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.10
         ```
 - for artifact helm user
     1.  get helm repo and update
@@ -39,9 +40,9 @@ Slurm on Kubernetes provides the following features:
         ```
     2. install slurm chart
         ```shell
-        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.9
+        helm install slurm ay-helm-mirror/chart -f charts/values.yaml --version 1.0.10
         ```
-    Or you can get template values.yaml from [link](https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/templates/slurm/slurm.values.yaml)
+    Or you can get template values.yaml from [link](https://raw.githubusercontent.com/AaronYang0628/slurm-on-k8s/refs/heads/main/chart/values.yaml)
 - for opertaor user
     1. test pull an image and apply
         ```
@@ -66,7 +67,7 @@ Slurm on Kubernetes provides the following features:
 When everything is ready, you can login your cluster and submit jobs.
 - Add PubKeys to login node
     ```markdown
-    you can edit `auth.ssh.configmap.perfabPubKeys` the file chart/values.yaml to add your public keys
+    you can edit `auth.ssh.configmap.perfabPubKeys` in the file chart/values.yaml, adding your public keys to the end 
     Or you can edit `spec.values.auth.ssh.configmap.perfabPubKeys` in your slurmdeployment CRD
     ```
 

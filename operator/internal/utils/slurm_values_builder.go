@@ -759,6 +759,9 @@ func BuildSlurmValues(valuesSpec *slurmv1.ValuesSpec) map[string]interface{} {
 			"cgroup": map[string]interface{}{
 				"name": "cgroup-conf",
 				"value": `ConstrainCores=yes
+CgroupPlugin=autodetect
+IgnoreSystemd=yes
+IgnoreSystemdOnFailure=yes
 ConstrainDevices=yes
 ConstrainRAMSpace=yes
 ConstrainSwapSpace=no`,
@@ -766,6 +769,8 @@ ConstrainSwapSpace=no`,
 			"slurmConf": `ClusterName=slurm-cluster
 SlurmctldHost={{ include "slurm.fullname" . }}-{{ .Values.slurmctld.name }}-0
 MpiDefault=pmi2
+DebugFlags=cgroup
+SlurmdDebug=debug
 ProctrackType=proctrack/cgroup
 ReturnToService=1
 SlurmctldPidFile=/var/run/slurmctld.pid
@@ -792,7 +797,6 @@ JobAcctGatherType=jobacct_gather/linux
 JobAcctGatherFrequency=30
 SlurmctldDebug=info
 SlurmctldLogFile=/var/log/slurm/slurmctld.log
-SlurmdDebug=info
 SlurmdLogFile=/var/log/slurm/slurmd.log
 NodeName={{ include "slurm.fullname" . }}-slurmd-cpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.ReplicaCount+10) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Socket*valuesSpec.SlurmdCPU.Resources.Requests.CorePerSocket*valuesSpec.SlurmdCPU.Resources.Requests.ThreadPerCore) + ` Sockets=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.Socket) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.CorePerSocket) + ` ThreadsPerCore=` + fmt.Sprintf("%d", valuesSpec.SlurmdCPU.Resources.Requests.ThreadPerCore) + ` RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdCPU.Resources.Requests.Memory)) + ` State=UNKNOWN
 NodeName={{ include "slurm.fullname" . }}-slurmd-gpu-[0-` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.ReplicaCount+10) + `] CPUs=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Socket*valuesSpec.SlurmdGPU.Resources.Requests.CorePerSocket*valuesSpec.SlurmdGPU.Resources.Requests.ThreadPerCore) + ` Sockets=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.Socket) + ` CoresPerSocket=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.CorePerSocket) + ` ThreadsPerCore=` + fmt.Sprintf("%d", valuesSpec.SlurmdGPU.Resources.Requests.ThreadPerCore) + ` RealMemory=` + fmt.Sprintf("%d", ParseRAMstr(valuesSpec.SlurmdGPU.Resources.Requests.Memory)) + ` State=UNKNOWN

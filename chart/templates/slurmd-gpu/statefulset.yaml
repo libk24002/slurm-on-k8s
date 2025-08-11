@@ -124,7 +124,11 @@ spec:
           securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmdGPU.containerSecurityContext "context" $) | nindent 12 }}
           {{- else }}
           securityContext:
+            hostPID: true
             privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
           {{- end }}
           {{- if .Values.slurmdGPU.diagnosticMode.enabled }}
           command: {{- include "common.tplvalues.render" (dict "value" .Values.slurmdGPU.diagnosticMode.command "context" $) | nindent 12 }}
@@ -200,6 +204,12 @@ spec:
               subPath: cgroup.conf
             - name: munge-socket-file
               mountPath: /run/munge
+            - mountPath: /sys/fs/cgroup
+              name: sys-fs-cgroup
+              readOnly: false
+            - mountPath: /proc
+              name: proc
+              readOnly: false
             {{- if .Values.slurmdGPU.extraVolumeMounts }}
             {{- include "common.tplvalues.render" ( dict "value" .Values.slurmdGPU.extraVolumeMounts "context" $) | nindent 12 }}
             {{- end }}
@@ -228,6 +238,15 @@ spec:
             name: {{ include "slurm.fullname" . }}-cgroup-conf
         - name: munge-socket-file
           emptyDir: {}
+        - name: sys-fs-cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+            type: Directory
+            mountPropagation: Bidirectional
+        - name: proc
+          hostPath:
+            path: /proc
+            type: Directory
         {{- if .Values.slurmdGPU.extraVolumes }}
         {{- include "common.tplvalues.render" ( dict "value" .Values.slurmdGPU.extraVolumes "context" $) | nindent 8 }}
         {{- end }}

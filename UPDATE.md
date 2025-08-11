@@ -71,7 +71,7 @@ Slurm on Kubernetes provides the following features:
         ```
     3. submit an CR
         ```shell
-        kubectl apply -f /root/slurm-on-k8s/operator/config/samples/slurm_v1_slurmdeployment.lensing.yaml
+        kubectl apply -f /root/slurm-on-k8s/operator/config/samples/slurm_v1_slurmdeployment.yaml
         ```
     3. build and push your operator
         ```shell

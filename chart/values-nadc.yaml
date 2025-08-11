@@ -239,9 +239,9 @@ slurmdGPU:
   podAffinityPreset: ""
   podAntiAffinityPreset: soft
   nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
+    type: "hard"
+    key: "kubernetes.io/hostname"
+    values: ["node5"]
   hostNetwork: false
   dnsPolicy: ""
   dnsConfig: {}

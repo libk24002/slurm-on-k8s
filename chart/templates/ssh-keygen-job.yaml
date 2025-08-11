@@ -4,7 +4,7 @@ metadata:
   name: {{ .Release.Name }}-ssh-keygen
   namespace: {{ .Release.Namespace | quote }}
   annotations:
-    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook: pre-install
     helm.sh/hook-weight: "-5"
     helm.sh/hook-timeout: "10m"
 spec:

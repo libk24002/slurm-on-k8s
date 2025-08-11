@@ -27,7 +27,7 @@ spec:
       ssh:
         configmap:
           name: slurm-ssh-auth-keys
-          prefabPubKeys: ["ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDrL/S9z3HpNMiJ369nnoLzaZlDdNQYtdrd29I5OV/HJkiYKxvz52WN8juwiwI50gIbTeRjxpmSmVFZErWfCx4ysb8dAt9j9PhD2hZuer56f3hnhABmwvyfZWEgj7Vyg4M8kNIMfmomrHjmwPCw4M6U03Afi/ux+O0kOd+qhZB2HTLJIjhmbDXrSblshA/sfoa2L9dofQkhzyrpu+/YpaVMfzyTBBCA8YN9EskbCp1Mk2iiXLUwGJBws2XGMK9bUuuomia4fQS5+wkuJ+Nov1zc2mLRH4b+Ze43q1vlKWZMTS8x5vIrUyM5S8EHzNZ8BYrskBCTpJfwDidjfclvJODYVngFeaEcOIBg+tbbTmEcuPH6MsiLUIsHXIMOpi+ZrX8CUMYYlqLS24wHJkG+FU2vFMEMeqyqIsZOs7AqtpnUQHOEiFSiUpacoB+ZM17TSjk4XSgjtYDZtHItJ65I64w4Tr88Y2OhsXmrYOdaVqVzdTEDrSHlbZ4+YdE15dwKRyk= 21430@Blwsye"]
+          prefabPubKeys: ["ssh-rsa xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]
     persistence:
       shared:
         enabled: true

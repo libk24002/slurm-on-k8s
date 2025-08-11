@@ -3,6 +3,10 @@ kind: Job
 metadata:
   name: {{ .Release.Name }}-ssh-keygen
   namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-timeout: "10m"
 spec:
   ttlSecondsAfterFinished: 1800
   backoffLimit: 3
@@ -14,16 +18,18 @@ spec:
         runAsGroup: 0
         fsGroup: 0
       initContainers:
-      - name: ssh-keygen
+      - name: generate-key-pair
         {{- if and .Values.image.mirror.registry (ne .Values.image.mirror.registry "") }}
-        image: {{ .Values.image.mirror.registry }}/docker.io/library/debian:latest
+        image: {{ .Values.image.mirror.registry }}/docker.io/library/alpine:3.19
         {{- else }}
-        image: m.daocloud.io/docker.io/library/debian:latest
+        image: m.daocloud.io/docker.io/library/alpine:3.19
         {{- end }}
         command: ["/bin/sh", "-c"]
         args:
           - |
-            apt-get update && apt-get install -y openssh-client &&
+            echo "nameserver 8.8.8.8" >> /etc/resolv.conf &&
+            echo "nameserver 114.114.114.114" >> /etc/resolv.conf &&
+            apk add --no-cache openssh-client &&
             ssh-keygen -t rsa -b 4096 -N '' -f /keys/id_rsa &&
             cp /keys/id_rsa.pub /keys/authorized_keys
             {{- range .Values.auth.ssh.configmap.prefabPubKeys }}

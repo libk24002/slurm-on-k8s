@@ -121,6 +121,7 @@ spec:
           securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmdCPU.containerSecurityContext "context" $) | nindent 12 }}
           {{- else }}
           securityContext:
+            hostPID: true
             privileged: true
           {{- end }}
           {{- if .Values.slurmdCPU.diagnosticMode.enabled }}
@@ -197,6 +198,9 @@ spec:
               subPath: cgroup.conf
             - name: munge-socket-file
               mountPath: /run/munge
+            - mountPath: /sys/fs/cgroup
+              name: sys-fs-cgroup
+              readOnly: false
             {{- if .Values.slurmdCPU.extraVolumeMounts }}
             {{- include "common.tplvalues.render" ( dict "value" .Values.slurmdCPU.extraVolumeMounts "context" $) | nindent 12 }}
             {{- end }}
@@ -225,6 +229,10 @@ spec:
             name: {{ include "slurm.fullname" . }}-cgroup-conf
         - name: munge-socket-file
           emptyDir: {}
+        - name: sys-fs-cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+            type: Directory
         {{- if .Values.slurmdCPU.extraVolumes }}
         {{- include "common.tplvalues.render" ( dict "value" .Values.slurmdCPU.extraVolumes "context" $) | nindent 8 }}
         {{- end }}

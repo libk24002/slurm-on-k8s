@@ -113,7 +113,7 @@ spec:
           core-per-socket: 1
           thread-per-core: 1
           ephemeral-storage: 10Gi
-          memory: 1Gi
+          memory: 2Gi
       nodeSelector: {}
       nodeAffinityPreset:
         type: ""

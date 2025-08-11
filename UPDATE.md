@@ -48,10 +48,14 @@ Slurm on Kubernetes provides the following features:
     1. publish helm chart
         ```shell
         helm package --dependency-update --destination /tmp/ ./chart
+        # helm package --destination /tmp/ ./chart
         ```
     2. test your helm chart
         ```shell
         helm upgrade --create-namespace -n slurm --install -f ./chart/values.yaml lensing /tmp/slurm-1.0.9.tgz
+
+        helm upgrade --create-namespace -n test --install -f ./chart/values.yaml test /tmp/slurm-1.0.9.tgz
+        helm --kubeconfig=/root/.kube/zverse_config upgrade --create-namespace -n slurm-nadc --install -f ./chart/values-nadc.yaml lensing /tmp/slurm-1.0.9.tgz
         ```
     3. index your chart
         ```shell
@@ -65,6 +69,10 @@ Slurm on Kubernetes provides the following features:
     2. test your operator in terminal
         ```shell
         make run
+        ```
+    3. submit an CR
+        ```shell
+        kubectl apply -f /root/slurm-on-k8s/operator/config/samples/slurm_v1_slurmdeployment.lensing.yaml
         ```
     3. build and push your operator
         ```shell

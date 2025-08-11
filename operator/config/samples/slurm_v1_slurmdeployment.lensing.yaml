@@ -56,15 +56,38 @@ spec:
         tag: 25.05-open-mpi
     slurmdCPU:
       replicaCount: 1
+      nodeAffinityPreset:
+        type: ""
+        key: ""
+        values: []
+        weight: 0
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmd
         tag: 25.05-open-mpi
       resources: 
         requests:
-          socket: 2
-          core-per-socket: 2
+          socket: 1
+          core-per-socket: 1
+          thread-per-core: 2
+          ephemeral-storage: 10Gi
+          memory: 4Gi
+      nodeSelector: {}
+    slurmdGPU:
+      replicaCount: 0
+      nodeAffinityPreset:
+        type: ""
+        key: ""
+        values: []
+        weight: 0
+      image:
+        registry: docker-registry.lab.zverse.space
+        repository: data-and-computing/slurm-slurmd
+        tag: 25.05-open-mpi
+      resources: 
+        requests:
+          socket: 1
+          core-per-socket: 4
           thread-per-core: 2
           ephemeral-storage: 10Gi
           memory: 8Gi
-  

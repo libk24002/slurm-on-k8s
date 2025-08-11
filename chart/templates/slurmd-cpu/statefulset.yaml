@@ -123,6 +123,9 @@ spec:
           securityContext:
             hostPID: true
             privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
           {{- end }}
           {{- if .Values.slurmdCPU.diagnosticMode.enabled }}
           command: {{- include "common.tplvalues.render" (dict "value" .Values.slurmdCPU.diagnosticMode.command "context" $) | nindent 12 }}
@@ -201,6 +204,9 @@ spec:
             - mountPath: /sys/fs/cgroup
               name: sys-fs-cgroup
               readOnly: false
+            - mountPath: /proc
+              name: proc
+              readOnly: false
             {{- if .Values.slurmdCPU.extraVolumeMounts }}
             {{- include "common.tplvalues.render" ( dict "value" .Values.slurmdCPU.extraVolumeMounts "context" $) | nindent 12 }}
             {{- end }}
@@ -232,6 +238,11 @@ spec:
         - name: sys-fs-cgroup
           hostPath:
             path: /sys/fs/cgroup
+            type: Directory
+            mountPropagation: Bidirectional
+        - name: proc
+          hostPath:
+            path: /proc
             type: Directory
         {{- if .Values.slurmdCPU.extraVolumes }}
         {{- include "common.tplvalues.render" ( dict "value" .Values.slurmdCPU.extraVolumes "context" $) | nindent 8 }}

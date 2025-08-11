@@ -52,14 +52,13 @@ Slurm on Kubernetes provides the following features:
         ```
     2. test your helm chart
         ```shell
-        helm upgrade --create-namespace -n slurm --install -f ./chart/values.yaml lensing /tmp/slurm-1.0.9.tgz
-
-        helm upgrade --create-namespace -n test --install -f ./chart/values.yaml test /tmp/slurm-1.0.9.tgz
-        helm --kubeconfig=/root/.kube/zverse_config upgrade --create-namespace -n slurm-nadc --install -f ./chart/values-nadc.yaml lensing /tmp/slurm-1.0.9.tgz
+        helm upgrade --create-namespace -n slurm --install -f ./chart/values.yaml lensing /tmp/slurm-1.0.10.tgz
+        helm upgrade --create-namespace -n test --install -f ./chart/values.yaml test /tmp/slurm-1.0.10.tgz
+        helm --kubeconfig=/root/.kube/zverse_config upgrade --create-namespace -n slurm-nadc --install -f ./chart/values-nadc.yaml lensing /tmp/slurm-1.0.10.tgz
         ```
     3. index your chart
         ```shell
-        helm repo index ./chart/ && cp -f ./chart/index.yaml ./index.yaml
+        helm repo index ./chart/ 
         ```
 - for operator developer
     1. install CRDs

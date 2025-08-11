@@ -8,7 +8,7 @@ else
 fi
 
 
-if [ "$MPI_TYPE" = "opem-mpi" ]; then
+if [ "$MPI_TYPE" = "open-mpi" ]; then
     echo "not need to update ~/.bashrc"
 elif [ "$MPI_TYPE" = "intel-mpi" ]; then
     echo 'export PATH="/opt/intel/oneapi/mpi/2021.14/bin:$PATH"' >> ~/.set_env.sh

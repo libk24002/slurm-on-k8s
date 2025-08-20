@@ -21,6 +21,7 @@ limitations under the License.
 package v1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -310,15 +311,9 @@ func (in *MungedSpec) DeepCopyInto(out *MungedSpec) {
 	in.DiagnosticMode.DeepCopyInto(&out.DiagnosticMode)
 	if in.ExtraVolumes != nil {
 		in, out := &in.ExtraVolumes, &out.ExtraVolumes
-		*out = make([]map[string]string, len(*in))
+		*out = make([]corev1.Volume, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = make(map[string]string, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.ExtraVolumeMounts != nil {
@@ -659,15 +654,9 @@ func (in *SlurmLogindSpec) DeepCopyInto(out *SlurmLogindSpec) {
 	}
 	if in.ExtraVolumes != nil {
 		in, out := &in.ExtraVolumes, &out.ExtraVolumes
-		*out = make([]map[string]string, len(*in))
+		*out = make([]corev1.Volume, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = make(map[string]string, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.ExtraVolumeMounts != nil {
@@ -763,15 +752,9 @@ func (in *SlurmdCPUSpec) DeepCopyInto(out *SlurmdCPUSpec) {
 	in.DiagnosticMode.DeepCopyInto(&out.DiagnosticMode)
 	if in.ExtraVolumes != nil {
 		in, out := &in.ExtraVolumes, &out.ExtraVolumes
-		*out = make([]map[string]string, len(*in))
+		*out = make([]corev1.Volume, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = make(map[string]string, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.ExtraVolumeMounts != nil {
@@ -812,15 +795,9 @@ func (in *SlurmdGPUSpec) DeepCopyInto(out *SlurmdGPUSpec) {
 	in.DiagnosticMode.DeepCopyInto(&out.DiagnosticMode)
 	if in.ExtraVolumes != nil {
 		in, out := &in.ExtraVolumes, &out.ExtraVolumes
-		*out = make([]map[string]string, len(*in))
+		*out = make([]corev1.Volume, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = make(map[string]string, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.ExtraVolumeMounts != nil {
@@ -917,15 +894,9 @@ func (in *SlurmdbdSpec) DeepCopyInto(out *SlurmdbdSpec) {
 	}
 	if in.ExtraVolumes != nil {
 		in, out := &in.ExtraVolumes, &out.ExtraVolumes
-		*out = make([]map[string]string, len(*in))
+		*out = make([]corev1.Volume, len(*in))
 		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = make(map[string]string, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
+			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
 	if in.ExtraVolumeMounts != nil {

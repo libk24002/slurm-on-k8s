@@ -41,25 +41,11 @@ spec:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-munged
         tag: "25.05"
-        pullPolicy: IfNotPresent
-        pullSecrets: []
-      extraVolumes: []
-      extraVolumeMounts: []
     slurmdbd:
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmdbd
         tag: "25.05"
-        pullPolicy: IfNotPresent
-        pullSecrets: []
-      nodeSelector: {}
-      nodeAffinityPreset:
-        type: ""
-        key: ""
-        values: []
-        weight: 0
-      extraVolumes: []
-      extraVolumeMounts: []
     slurmctld:
       image:
         registry: docker-registry.lab.zverse.space
@@ -100,7 +86,7 @@ spec:
       extraVolumes: []
       extraVolumeMounts: []
     slurmdCPU:
-      replicaCount: 2
+      replicaCount: 1
       image:
         registry: docker-registry.lab.zverse.space
         repository: data-and-computing/slurm-slurmd
@@ -120,8 +106,15 @@ spec:
         key: ""
         values: []
         weight: 0
-      extraVolumes: []
-      extraVolumeMounts: []
+      extraVolumes: 
+      - name: csst-lensing-download
+        nfs:
+          path: /lensing-download
+          readOnly: true
+          server: 14d744955f-d8693.cn-hangzhou-zjy-d01.nas.res.cloud.zhejianglab.com
+      extraVolumeMounts:
+      - mountPath: /lensing-download
+        name: csst-lensing-download
     slurmdGPU:
       replicaCount: 0
       image:

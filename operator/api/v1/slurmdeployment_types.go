@@ -18,7 +18,7 @@ package v1
 
 import (
 	"encoding/json"
-
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -154,7 +154,7 @@ type MungedSpec struct {
 	CommonLabels      map[string]string       `json:"commonLabels,omitempty"`
 	Image             ImageSpec               `json:"image"`
 	DiagnosticMode    DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes      []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumes      []corev1.Volume         `json:"extraVolumes,omitempty"`
 	ExtraVolumeMounts []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
@@ -184,7 +184,7 @@ type SlurmdCPUSpec struct {
 	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
 	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
 	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumes       []corev1.Volume         `json:"extraVolumes,omitempty"`
 	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
@@ -199,7 +199,7 @@ type SlurmdGPUSpec struct {
 	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
 	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
 	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
-	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumes       []corev1.Volume         `json:"extraVolumes,omitempty"`
 	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
@@ -265,7 +265,7 @@ type SlurmdbdSpec struct {
 	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
 	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
 	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
-	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumes       []corev1.Volume         `json:"extraVolumes,omitempty"`
 	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 
@@ -278,7 +278,7 @@ type SlurmLogindSpec struct {
 	DiagnosticMode     DiagnosticModeSpec      `json:"diagnosticMode,omitempty"`
 	NodeAffinityPreset NodeAffinityPreset      `json:"nodeAffinityPreset,omitempty"`
 	NodeSelector       map[string]string       `json:"nodeSelector,omitempty"`
-	ExtraVolumes       []map[string]string     `json:"extraVolumes,omitempty"`
+	ExtraVolumes       []corev1.Volume         `json:"extraVolumes,omitempty"`
 	ExtraVolumeMounts  []ExtraVolumeMountsSpec `json:"extraVolumeMounts,omitempty"`
 }
 

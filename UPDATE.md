@@ -61,8 +61,14 @@ Slurm on Kubernetes provides the following features:
         helm repo index ./chart/ 
         ```
 - for operator developer
+    0. generte updated CRD
+        ```shell
+        make clean 
+        make manifests
+        ```
     1. install CRDs
         ```shell
+        # cd operator
         make install
         ```
     2. test your operator in terminal

@@ -1,0 +1,453 @@
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "slurm.fullname" . }}-slurmd
+  namespace: {{ include "common.names.namespace" . | quote }
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmd.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.slurmd.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.slurmd.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.slurmd.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.slurmd.revisionHistoryLimit }}
+  {{- if .Values.slurmd.updateStrategy }}
+  strategy: {{- toYaml .Values.slurmd.updateStrategy | nindent 4 }}
+  {{- end }}
+  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.slurmd.podLabels .Values.slurmd.commonLabels ) "context" . ) }}
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
+      annotations:
+        {{- if .Values.slurmd.podAnnotations }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.slurmd.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+        {{- if and .Values.slurmd.metrics.enabled .Values.slurmd.metrics.podAnnotations }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.slurmd.metrics.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "slurmd.imagePullSecrets" . | nindent 6 }}
+      shareProcessNamespace: {{ .Values.slurmd.sidecarSingleProcessNamespace }}
+      serviceAccountName: {{ include "slurm.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.slurmd.automountServiceAccountToken }}
+      {{- if .Values.slurmd.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.slurmd.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.slurmd.podAffinityPreset "customLabels" $podLabels "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.slurmd.podAntiAffinityPreset "customLabels" $podLabels "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.slurmd.nodeAffinityPreset.type "key" .Values.slurmd.nodeAffinityPreset.key "values" .Values.slurmd.nodeAffinityPreset.Values.slurmd) | nindent 10 }}
+      {{- end }}
+      hostNetwork: {{ .Values.slurmd.hostNetwork }}
+      {{- if .Values.slurmd.dnsPolicy  }}
+      dnsPolicy: {{ .Values.slurmd.dnsPolicy }}
+      {{- end }}
+      {{- if .Values.slurmd.dnsConfig }}
+      dnsConfig: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.dnsConfig "context" $) | nindent 8 }}
+      {{- end }}
+      hostIPC: {{ .Values.slurmd.hostIPC }}
+      {{- if .Values.slurmd.priorityClassName }}
+      priorityClassName: {{ .Values.slurmd.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.slurmd.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.slurmd.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.slurmd.schedulerName }}
+      schedulerName: {{ .Values.slurmd.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.slurmd.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.topologySpreadConstraints "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.slurmd.podSecurityContext.enabled }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmd.podSecurityContext "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.slurmd.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.slurmd.terminationGracePeriodSeconds }}
+      {{- end }}
+      initContainers:
+        - name: init-permission
+          image: {{ .Values.slurmd.initPermission.image.registry }}/{{ .Values.slurmd.initPermission.image.repository }}:{{ .Values.slurmd.initPermission.image.tag }}
+          imagePullPolicy: {{ .Values.slurmd.initPermission.image.pullPolicy | quote }}
+          {{- if .Values.slurmd.initPermission.resources }}
+          resources: {{- toYaml .Values.slurmd.initPermission.resources | nindent 12 }}
+          {{- else if ne .Values.slurmd.initPermission.resourcesPreset "none" }}
+          resources: {{- include "common.resources.preset" (dict "type" .Values.slurmd.initPermission.resourcesPreset) | nindent 12 }}
+          {{- end }}
+          command:
+            - /bin/sh
+          args:
+            - -ec
+            - |
+              chmod 755 /run/munge && chown 1108:1108 /run/munge
+          volumeMounts:
+            - name: munge-socket-file
+              mountPath: /run/munge
+        {{- if .Values.slurmd.cloneStaticSiteFromGit.enabled }}
+        - name: init-permission
+          image: {{ include "nginx.cloneStaticSiteFromGit.image" . }}
+          imagePullPolicy: {{ .Values.slurmd.cloneStaticSiteFromGit.image.pullPolicy | quote }}
+          {{- if .Values.slurmd.containerSecurityContext.enabled }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmd.containerSecurityContext "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.gitClone.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.gitClone.command "context" $) | nindent 12 }}
+          {{- else }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              [[ -f "/opt/bitnami/scripts/git/entrypoint.sh" ]] && source "/opt/bitnami/scripts/git/entrypoint.sh"
+              git clone {{ .Values.slurmd.cloneStaticSiteFromGit.repository }} --branch {{ .Values.slurmd.cloneStaticSiteFromGit.branch }} /tmp/app
+              [[ "$?" -eq 0 ]] && shopt -s dotglob && rm -rf /app/* && mv /tmp/app/* /app/
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.gitClone.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.gitClone.args "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.gitSync.resources }}
+          resources: {{- toYaml .Values.slurmd.cloneStaticSiteFromGit.gitSync.resources | nindent 12 }}
+          {{- else if ne .Values.slurmd.cloneStaticSiteFromGit.gitSync.resourcesPreset "none" }}
+          resources: {{- include "common.resources.preset" (dict "type" .Values.slurmd.cloneStaticSiteFromGit.gitSync.resourcesPreset) | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /etc/ssh
+              subPath: etc-ssh-dir
+            - name: empty-dir
+              mountPath: /.ssh
+              subPath: ssh-dir
+            - name: staticsite
+              mountPath: /app
+            {{- if .Values.slurmd.cloneStaticSiteFromGit.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.extraEnvVars }}
+          env: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.extraEnvVarsSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.extraEnvVarsSecret "context" $) }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.slurmd.initContainers }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        {{- if .Values.slurmd.cloneStaticSiteFromGit.enabled }}
+        - name: git-repo-syncer
+          image: {{ include "nginx.cloneStaticSiteFromGit.image" . }}
+          imagePullPolicy: {{ .Values.slurmd.cloneStaticSiteFromGit.image.pullPolicy | quote }}
+          {{- if .Values.slurmd.containerSecurityContext.enabled }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmd.containerSecurityContext "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.gitSync.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.gitSync.command "context" $) | nindent 12 }}
+          {{- else }}
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              [[ -f "/opt/bitnami/scripts/git/entrypoint.sh" ]] && source "/opt/bitnami/scripts/git/entrypoint.sh"
+              while true; do
+                  cd /app && git -c safe.directory=/app pull origin {{ .Values.slurmd.cloneStaticSiteFromGit.branch }}
+                  sleep {{ .Values.slurmd.cloneStaticSiteFromGit.interval }}
+              done
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.gitSync.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.gitSync.args "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.gitSync.resources }}
+          resources: {{- toYaml .Values.slurmd.cloneStaticSiteFromGit.gitSync.resources | nindent 12 }}
+          {{- else if ne .Values.slurmd.cloneStaticSiteFromGit.gitSync.resourcesPreset "none" }}
+          resources: {{- include "common.resources.preset" (dict "type" .Values.slurmd.cloneStaticSiteFromGit.gitSync.resourcesPreset) | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /etc/ssh
+              subPath: etc-ssh-dir
+            - name: empty-dir
+              mountPath: /.ssh
+              subPath: ssh-dir
+            - name: staticsite
+              mountPath: /app
+            {{- if .Values.slurmd.cloneStaticSiteFromGit.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.extraEnvVars }}
+          env: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.cloneStaticSiteFromGit.extraEnvVarsSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.slurmd.cloneStaticSiteFromGit.extraEnvVarsSecret "context" $) }}
+          {{- end }}
+        {{- end }}
+        - name: nginx
+          image: {{ include "nginx.image" . }}
+          imagePullPolicy: {{ .Values.slurmd.image.pullPolicy | quote }}
+          {{- if .Values.slurmd.containerSecurityContext.enabled }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmd.containerSecurityContext "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.diagnosticMode.enabled }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.diagnosticMode.command "context" $) | nindent 12 }}
+          {{- else if .Values.slurmd.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.command "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.diagnosticMode.enabled }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.diagnosticMode.args "context" $) | nindent 12 }}
+          {{- else if .Values.slurmd.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.args "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.slurmd.lifecycleHooks }}
+          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          env:
+            - name: BITNAMI_DEBUG
+              value: {{ ternary "true" "false" .Values.slurmd.image.debug | quote }}
+            {{- if .Values.slurmd.containerPorts.http }}
+            - name: NGINX_HTTP_PORT_NUMBER
+              value: {{ .Values.slurmd.containerPorts.http | quote }}
+            {{- end }}
+            {{- if .Values.slurmd.containerPorts.https }}
+            - name: NGINX_HTTPS_PORT_NUMBER
+              value: {{ .Values.slurmd.containerPorts.https | quote }}
+            {{- end }}
+            {{- if or .Values.slurmd.streamServerBlock .Values.slurmd.existingStreamServerBlockConfigmap }}
+            - name: NGINX_ENABLE_STREAM
+              value: "true"
+            {{- end }}
+            {{- if .Values.slurmd.extraEnvVars }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.extraEnvVars "context" $) | nindent 12 }}
+            {{- end }}
+          envFrom:
+            {{- if .Values.slurmd.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.slurmd.extraEnvVarsCM "context" $) }}
+            {{- end }}
+            {{- if .Values.slurmd.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.slurmd.extraEnvVarsSecret "context" $) }}
+            {{- end }}
+          ports:
+            {{- if .Values.slurmd.containerPorts.http }}
+            - name: http
+              containerPort: {{ .Values.slurmd.containerPorts.http }}
+            {{- end }}
+            {{- if .Values.slurmd.containerPorts.https }}
+            - name: https
+              containerPort: {{ .Values.slurmd.containerPorts.https }}
+            {{- end }}
+            {{- if .Values.slurmd.extraContainerPorts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.extraContainerPorts "context" $) | nindent 12 }}
+            {{- end }}
+          {{- if not .Values.slurmd.diagnosticMode.enabled }}
+          {{- if .Values.slurmd.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.customLivenessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.slurmd.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.slurmd.livenessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: {{ ternary "https" "http" (and (empty .Values.slurmd.containerPorts.http) (not (empty .Values.slurmd.containerPorts.https))) }}
+          {{- end }}
+          {{- if .Values.slurmd.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.customReadinessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.slurmd.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.slurmd.readinessProbe "enabled" "path") "context" $) | nindent 12 }}
+            httpGet:
+              path: {{ .Values.slurmd.readinessProbe.path }}
+              port: {{ ternary "https" "http" (and (empty .Values.slurmd.containerPorts.http) (not (empty .Values.slurmd.containerPorts.https))) }}
+          {{- end }}
+          {{- if .Values.slurmd.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.slurmd.customStartupProbe "context" $) | nindent 12 }}
+          {{- else if .Values.slurmd.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.slurmd.startupProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: {{ ternary "https" "http" (and (empty .Values.slurmd.containerPorts.http) (not (empty .Values.slurmd.containerPorts.https))) }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.slurmd.resources }}
+          resources: {{- toYaml .Values.slurmd.resources | nindent 12 }}
+          {{- else if ne .Values.slurmd.resourcesPreset "none" }}
+          resources: {{- include "common.resources.preset" (dict "type" .Values.slurmd.resourcesPreset) | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/nginx/conf
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/nginx/logs
+              subPath: app-logs-dir
+            - name: empty-dir
+              mountPath: /opt/bitnami/nginx/tmp
+              subPath: app-tmp-dir
+            {{- if or .Values.slurmd.serverBlock .Values.slurmd.existingServerBlockConfigmap }}
+            - name: nginx-server-block
+              mountPath: /opt/bitnami/nginx/conf/server_blocks
+            {{- end }}
+            {{- if or .Values.slurmd.streamServerBlock .Values.slurmd.existingStreamServerBlockConfigmap }}
+            - name: nginx-stream-server-block
+              mountPath: /opt/bitnami/nginx/conf/stream_server_blocks
+            {{- end }}
+            {{- if .Values.slurmd.contextIncludes.main }}
+            - name: nginx-context-main
+              mountPath: /opt/bitnami/nginx/conf/context.d/main
+            {{- end }}
+            {{- range $index, $configMap := .Values.slurmd.existingContextMainConfigmaps }}
+            - name: nginx-context-main-{{ $index }}
+              mountPath: /opt/bitnami/nginx/conf/context.d/main
+            {{- end }}
+            {{- if .Values.slurmd.contextIncludes.events }}
+            - name: nginx-context-events
+              mountPath: /opt/bitnami/nginx/conf/context.d/events
+            {{- end }}
+            {{- range $index, $configMap := .Values.slurmd.existingContextEventsConfigmaps }}
+            - name: nginx-context-events-{{ $index }}
+              mountPath: /opt/bitnami/nginx/conf/context.d/events
+            {{- end }}
+            {{- if .Values.slurmd.contextIncludes.http }}
+            - name: nginx-context-http
+              mountPath: /opt/bitnami/nginx/conf/context.d/http
+            {{- end }}
+            {{- range $index, $configMap := .Values.slurmd.existingContextHttpConfigmaps }}
+            - name: nginx-context-http-{{ $index }}
+              mountPath: /opt/bitnami/nginx/conf/context.d/http
+            {{- end }}
+            {{- if (include "nginx.useStaticSite" .) }}
+            - name: staticsite
+              mountPath: /app
+            {{- end }}
+            {{- if .Values.slurmd.tls.enabled }}
+            - name: certificate
+              mountPath: /certs
+            {{- else }}
+            - name: empty-dir
+              mountPath: /certs
+              subPath: app-tls-dir
+            {{- end }}
+            {{- if .Values.slurmd.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" ( dict "value" .Values.slurmd.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- end }}
+        {{- if .Values.slurmd.metrics.enabled }}
+        - name: metrics
+          image: {{ include "nginx.metrics.image" . }}
+          imagePullPolicy: {{ .Values.slurmd.metrics.image.pullPolicy | quote }}
+          {{- if .Values.slurmd.metrics.securityContext.enabled }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.slurmd.metrics.securityContext "context" $) | nindent 12 }}
+          {{- end }}
+          command:
+            - exporter
+          args:
+            - --nginx.scrape-uri
+            - {{ printf "http://127.0.0.1:%d/status" (int (default .Values.slurmd.containerPorts.http .Values.slurmd.metrics.port)) | quote }}
+            - --web.listen-address
+            - {{ printf ":%d" (int .Values.slurmd.metrics.containerPorts.metrics) | quote }}
+            {{- if .Values.slurmd.metrics.extraArgs }}
+            {{- include "common.tplvalues.render" ( dict "value" .Values.slurmd.metrics.extraArgs "context" $ ) | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.slurmd.metrics.containerPorts.metrics }}
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          {{- if .Values.slurmd.metrics.resources }}
+          resources: {{- toYaml .Values.slurmd.metrics.resources | nindent 12 }}
+          {{- else if ne .Values.slurmd.metrics.resourcesPreset "none" }}
+          resources: {{- include "common.resources.preset" (dict "type" .Values.slurmd.metrics.resourcesPreset) | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.slurmd.sidecars }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.slurmd.sidecars "context" $) | nindent 8 }}
+        {{- end }}
+      volumes:
+        - name: empty-dir
+          emptyDir: {}
+        {{- if .Values.slurmd.tls.enabled }}
+        - name: certificate
+          secret:
+            {{- if .Values.slurmd.tls.existingSecret }}
+            secretName: {{ .Values.slurmd.tls.existingSecret }}
+            {{- else }}
+            secretName: {{ printf "%s-tls" (include "common.names.fullname" .) }}
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+            {{- end }}
+        {{- end }}
+        {{- if or .Values.slurmd.serverBlock .Values.slurmd.existingServerBlockConfigmap }}
+        - name: nginx-server-block
+          configMap:
+            name: {{ include "nginx.serverBlockConfigmapName" . }}
+        {{- end }}
+        {{- if or .Values.slurmd.streamServerBlock .Values.slurmd.existingStreamServerBlockConfigmap }}
+        - name: nginx-stream-server-block
+          configMap:
+            name: {{ include "nginx.streamServerBlockConfigmapName" . }}
+        {{- end }}
+        {{- if .Values.slurmd.contextIncludes.main }}
+        - name: nginx-context-main
+          configMap:
+            name: {{ printf "%s-context-main" (include "common.names.fullname" .) }}
+        {{- end }}
+        {{- range $index, $configMap := .Values.slurmd.existingContextMainConfigmaps }}
+        - name: nginx-context-main-{{ $index }}
+          configMap:
+            name: {{ printf "%s" (tpl $configMap $) }}
+        {{- end }}
+        {{- if .Values.slurmd.contextIncludes.events }}
+        - name: nginx-context-events
+          configMap:
+            name: {{ printf "%s-context-events" (include "common.names.fullname" .) }}
+        {{- end }}
+        {{- range $index, $configMap := .Values.slurmd.existingContextEventsConfigmaps }}
+        - name: nginx-context-events-{{ $index }}
+          configMap:
+            name: {{ printf "%s" (tpl $configMap $) }}
+        {{- end }}
+        {{- if .Values.slurmd.contextIncludes.http }}
+        - name: nginx-context-http
+          configMap:
+            name: {{ printf "%s-context-http" (include "common.names.fullname" .) }}
+        {{- end }}
+        {{- range $index, $configMap := .Values.slurmd.existingContextHttpConfigmaps }}
+        - name: nginx-context-http-{{ $index }}
+          configMap:
+            name: {{ printf "%s" (tpl $configMap $) }}
+        {{- end }}
+        {{- if (include "nginx.useStaticSite" .) }}
+        - name: staticsite
+          {{- include "nginx.staticSiteVolume" . | nindent 10 }}
+        {{- end }}
+        {{- if .Values.slurmd.extraVolumes }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.slurmd.extraVolumes "context" $) | nindent 8 }}
+        {{- end }}

@@ -1,3 +1,132 @@
+image:
+  slurmctld:
+    repository: langgenius/dify-api
+    tag: "1.8.1"
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ##
+    # pullSecrets:
+    #   - myRegistryKeySecretName
+  slurmdbd:
+    repository: langgenius/dify-web
+    tag: "1.8.1"
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ##
+    # pullSecrets:
+    #   - myRegistryKeySecretName
+  slurmd:
+    repository: langgenius/dify-api
+    tag: "1.8.1"
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ##
+    # pullSecrets:
+    #   - myRegistryKeySecretName
+  login:
+    repository: langgenius/dify-api
+    tag: "1.8.1"
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ##
+    # pullSecrets:
+    #   - myRegistryKeySecretName
+
+slurmctld:
+  enabled: true
+  replicas: 1
+  name: slurmctld
+  commonLabels: {}
+  image:
+    registry: docker-registry.lab.zverse.space
+    repository: data-and-computing/slurm-slurmctld
+    tag: "25.05"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  replicaCount: 1
+  automountServiceAccountToken: false
+  podLabels: {}
+  affinity: {}
+  podAnnotations: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  hostNetwork: false
+  dnsPolicy: ""
+  dnsConfig: {}
+  hostIPC: false
+  priorityClassName: ""
+  nodeSelector: {}
+  tolerations: []
+  schedulerName: ""
+  topologySpreadConstraints: []
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    supplementalGroups: []
+    fsGroup: 0
+  terminationGracePeriodSeconds: ""
+  hostAliases: []
+  diagnosticMode:
+    enabled: false
+    command: []
+    args: []
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  revisionHistoryLimit: 10
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  lifecycleHooks: {}
+  resources: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  service:
+    name: slurmctld-headless
+    ssh:
+      type: ClusterIP
+      port: 22
+      targetPort: 22
+    slurmctld:
+      type: ClusterIP
+      port: 6817
+      targetPort: 6817
+
+
+
 mariadb:
   port: 3306
   auth:
@@ -7,15 +136,9 @@ mariadb:
     database: "slurm_acct_db"
   primary:
     persistence:
-      enabled: true
-      accessModes:
-      - ReadWriteMany
-      storageClass: "juicefs-tidb-oss"
+      enabled: false
+      storageClass: ""
       size: 2Gi
-    readinessProbe:
-      enabled: false
-    livenessProbe:
-      enabled: false
   image:
     registry: m.daocloud.io/docker.io
     repository: bitnami/mariadb
@@ -33,14 +156,12 @@ auth:
 persistence:
   shared:
     enabled: true
+    existingClaim: ""
     accessModes:
-    - ReadWriteMany
+      - ReadWriteMany
     name: slurm-shared-storage
-    storageClass: "juicefs-tidb-oss"
+    storageClass: ""
     size: 8Gi
-image:
-  mirror:
-    registry: m.daocloud.io
 resourcesPreset: "nano"
 munged:
   name: munged
@@ -146,7 +267,7 @@ slurmdCPU:
     tag: "25.05-open-mpi"
     pullPolicy: IfNotPresent
     pullSecrets: []
-  replicaCount: 1
+  replicaCount: 0
   automountServiceAccountToken: false
   podLabels: {}
   affinity: {}
@@ -239,9 +360,9 @@ slurmdGPU:
   podAffinityPreset: ""
   podAntiAffinityPreset: soft
   nodeAffinityPreset:
-    type: "hard"
-    key: "kubernetes.io/hostname"
-    values: ["node5"]
+    type: ""
+    key: ""
+    values: []
   hostNetwork: false
   dnsPolicy: ""
   dnsConfig: {}

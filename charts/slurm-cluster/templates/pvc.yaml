@@ -1,22 +1,20 @@
-{{- if and .Values.persistence.shared.enabled (not .Values.persistence.shared.existingClaim) }}
+{{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ .Values.persistence.shared.name | quote }}
+  name: {{ printf "%s-slurm-workspace" (include "common.names.fullname" .) }}
   namespace: {{ include "common.names.namespace" . | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.persistence.shared.commonLabels "context" $ ) | nindent 4 }}
-    app.kubernetes.io/component: shared-storage
-  {{- if .Values.persistence.shared.annotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.persistence.shared.annotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.persistence.annotations }}
+  annotations: {{- toYaml .Values.persistence.annotations | nindent 4 }}
   {{- end }}
 spec:
   accessModes:
-  {{- range .Values.persistence.shared.accessModes }}
+  {{- range .Values.persistence.accessModes }}
     - {{ . | quote }}
   {{- end }}
   resources:
     requests:
-      storage: {{ .Values.persistence.shared.size | quote }}
-  {{- include "common.storage.class" (dict "persistence" .Values.persistence.shared "global" .Values.global) | nindent 2 }}
+      storage: {{ .Values.persistence.size | quote }}
+  {{- include "common.storage.class" (dict "persistence" .Values.persistence "global" .Values.global) | nindent 2 }}
 {{- end -}}

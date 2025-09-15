@@ -1,50 +1,11 @@
-image:
-  slurmctld:
-    repository: langgenius/dify-api
-    tag: "1.8.1"
-    pullPolicy: IfNotPresent
-    ## Optionally specify an array of imagePullSecrets.
-    ## Secrets must be manually created in the namespace.
-    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-    ##
-    # pullSecrets:
-    #   - myRegistryKeySecretName
-  slurmdbd:
-    repository: langgenius/dify-web
-    tag: "1.8.1"
-    pullPolicy: IfNotPresent
-    ## Optionally specify an array of imagePullSecrets.
-    ## Secrets must be manually created in the namespace.
-    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-    ##
-    # pullSecrets:
-    #   - myRegistryKeySecretName
-  slurmd:
-    repository: langgenius/dify-api
-    tag: "1.8.1"
-    pullPolicy: IfNotPresent
-    ## Optionally specify an array of imagePullSecrets.
-    ## Secrets must be manually created in the namespace.
-    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-    ##
-    # pullSecrets:
-    #   - myRegistryKeySecretName
-  login:
-    repository: langgenius/dify-api
-    tag: "1.8.1"
-    pullPolicy: IfNotPresent
-    ## Optionally specify an array of imagePullSecrets.
-    ## Secrets must be manually created in the namespace.
-    ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-    ##
-    # pullSecrets:
-    #   - myRegistryKeySecretName
+kubeVersion: ""
+nameOverride: ""
+fullnameOverride: ""
+clusterDomain: cluster.local
+commonLabels: {}
+commonAnnotations: {}
 
 slurmctld:
-  enabled: true
-  replicas: 1
-  name: slurmctld
-  commonLabels: {}
   image:
     registry: docker-registry.lab.zverse.space
     repository: data-and-computing/slurm-slurmctld
@@ -52,45 +13,11 @@ slurmctld:
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
-  automountServiceAccountToken: false
-  podLabels: {}
+  resources: {}
   affinity: {}
-  podAnnotations: {}
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  hostNetwork: false
-  dnsPolicy: ""
-  dnsConfig: {}
-  hostIPC: false
-  priorityClassName: ""
   nodeSelector: {}
   tolerations: []
-  schedulerName: ""
-  topologySpreadConstraints: []
-  podSecurityContext:
-    enabled: true
-    fsGroupChangePolicy: Always
-    supplementalGroups: []
-    fsGroup: 0
-  terminationGracePeriodSeconds: ""
-  hostAliases: []
-  diagnosticMode:
-    enabled: false
-    command: []
-    args: []
-  extraEnvVars: []
-  extraEnvVarsCM: ""
-  extraEnvVarsSecret: ""
-  revisionHistoryLimit: 10
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate: {}
-  lifecycleHooks: {}
-  resources: {}
+  extraEnv: []
   extraVolumes: []
   extraVolumeMounts: []
   livenessProbe:
@@ -115,329 +42,20 @@ slurmctld:
     failureThreshold: 3
     successThreshold: 1
   service:
-    name: slurmctld-headless
-    ssh:
-      type: ClusterIP
-      port: 22
-      targetPort: 22
-    slurmctld:
-      type: ClusterIP
-      port: 6817
-      targetPort: 6817
-
-
-
-mariadb:
-  port: 3306
-  auth:
-    rootPassword: "password-for-root"
-    username: "slurm"
-    password: "password-for-slurm"
-    database: "slurm_acct_db"
-  primary:
-    persistence:
-      enabled: false
-      storageClass: ""
-      size: 2Gi
-  image:
-    registry: m.daocloud.io/docker.io
-    repository: bitnami/mariadb
-auth:
-  ssh:
-    secret:
-      name: slurm-ssh-keys
-      keys:
-        private: id_rsa
-        public: id_rsa.pub
-        authorizedKeys: authorized_keys
-    configmap:
-      name: slurm-ssh-auth-keys
-      prefabPubKeys: ["ssh-rsa sample_public_key"]
-persistence:
-  shared:
+    type: ClusterIP
+    name: slurmctld
+    port: 6817
+    targetPort: 6817
+  persistence:
     enabled: true
-    existingClaim: ""
+    mountPath: /var/spool/slurmctld
+    annotations: {}
     accessModes:
       - ReadWriteMany
-    name: slurm-shared-storage
-    storageClass: ""
-    size: 8Gi
-resourcesPreset: "nano"
-munged:
-  name: munged
-  commonLabels: {}
-  image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-munged
-    tag: "25.05"
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  diagnosticMode:
-    enabled: false
-    command: []
-    args: []
-  extraVolumeMounts: []
-slurmctld:
-  name: slurmctld
-  commonLabels: {}
-  image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-slurmctld
-    tag: "25.05"
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  replicaCount: 1
-  automountServiceAccountToken: false
-  podLabels: {}
-  affinity: {}
-  podAnnotations: {}
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  hostNetwork: false
-  dnsPolicy: ""
-  dnsConfig: {}
-  hostIPC: false
-  priorityClassName: ""
-  nodeSelector: {}
-  tolerations: []
-  schedulerName: ""
-  topologySpreadConstraints: []
-  podSecurityContext:
-    enabled: true
-    fsGroupChangePolicy: Always
-    supplementalGroups: []
-    fsGroup: 0
-  terminationGracePeriodSeconds: ""
-  hostAliases: []
-  diagnosticMode:
-    enabled: false
-    command: []
-    args: []
-  extraEnvVars: []
-  extraEnvVarsCM: ""
-  extraEnvVarsSecret: ""
-  revisionHistoryLimit: 10
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate: {}
-  lifecycleHooks: {}
-  resources: {}
-  extraVolumes: []
-  extraVolumeMounts: []
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    periodSeconds: 10
-    failureThreshold: 6
-    successThreshold: 1
-  startupProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    periodSeconds: 10
-    failureThreshold: 6
-    successThreshold: 1
-  readinessProbe:
-    enabled: false
-    initialDelaySeconds: 5
-    timeoutSeconds: 3
-    periodSeconds: 5
-    failureThreshold: 3
-    successThreshold: 1
-  service:
-    name: slurmctld-headless
-    ssh:
-      type: ClusterIP
-      port: 22
-      targetPort: 22
-    slurmctld:
-      type: ClusterIP
-      port: 6817
-      targetPort: 6817
-slurmdCPU:
-  commonLabels: {}
-  image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-slurmd
-    tag: "25.05-open-mpi"
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  replicaCount: 0
-  automountServiceAccountToken: false
-  podLabels: {}
-  affinity: {}
-  podAnnotations: {}
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  hostNetwork: false
-  dnsPolicy: ""
-  dnsConfig: {}
-  hostIPC: false
-  priorityClassName: ""
-  nodeSelector: {}
-  tolerations: []
-  schedulerName: ""
-  topologySpreadConstraints: []
-  podSecurityContext:
-    enabled: true
-    fsGroupChangePolicy: Always
-    supplementalGroups: []
-    fsGroup: 0
-  terminationGracePeriodSeconds: ""
-  hostAliases: []
-  diagnosticMode:
-    enabled: false
-    command: ["/bin/sh"]
-    args: ["-c", "sleep 1d"]
-  extraEnvVars: []
-  extraEnvVarsCM: ""
-  extraEnvVarsSecret: ""
-  revisionHistoryLimit: 10
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate: {}
-  lifecycleHooks: {}
-  resources: 
-    requests:
-      cpu: 1
-      ephemeral-storage: 10Gi
-      memory: 2Gi
-  extraVolumes: []
-  extraVolumeMounts: []
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    periodSeconds: 10
-    failureThreshold: 6
-    successThreshold: 1
-  startupProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    periodSeconds: 10
-    failureThreshold: 6
-    successThreshold: 1
-  readinessProbe:
-    enabled: false
-    initialDelaySeconds: 5
-    timeoutSeconds: 3
-    periodSeconds: 5
-    failureThreshold: 3
-    successThreshold: 1
-  service:
-    name: slurmd-cpu-headless
-    ssh:
-      type: ClusterIP
-      port: 22
-      targetPort: 22
-    slurmd:
-      type: ClusterIP
-      port: 6818
-      targetPort: 6818
-slurmdGPU:
-  commonLabels: {}
-  image:
-    registry: docker-registry.lab.zverse.space
-    repository: data-and-computing/slurm-slurmd
-    tag: "25.05-open-mpi"
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-  replicaCount: 0
-  automountServiceAccountToken: false
-  podLabels: {}
-  affinity: {}
-  podAnnotations: {}
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  hostNetwork: false
-  dnsPolicy: ""
-  dnsConfig: {}
-  hostIPC: false
-  priorityClassName: ""
-  nodeSelector: {}
-  tolerations: []
-  schedulerName: ""
-  topologySpreadConstraints: []
-  podSecurityContext:
-    enabled: true
-    fsGroupChangePolicy: Always
-    supplementalGroups: []
-    fsGroup: 0
-  terminationGracePeriodSeconds: ""
-  hostAliases: []
-  diagnosticMode:
-    enabled: false
-    command: []
-    args: []
-  extraEnvVars: []
-  extraEnvVarsCM: ""
-  extraEnvVarsSecret: ""
-  revisionHistoryLimit: 10
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate: {}
-  lifecycleHooks: {}
-  resources: 
-    requests:
-      cpu: 500m
-      ephemeral-storage: 10Gi
-      memory: 1Gi
-      nvidia.com/gpu.shared: 1
-    limits:
-      cpu: 1
-      ephemeral-storage: 10Gi
-      memory: 2Gi
-      nvidia.com/gpu.shared: 1
-  extraVolumes: []
-  extraVolumeMounts: []
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    periodSeconds: 10
-    failureThreshold: 6
-    successThreshold: 1
-  startupProbe:
-    enabled: false
-    initialDelaySeconds: 30
-    timeoutSeconds: 5
-    periodSeconds: 10
-    failureThreshold: 6
-    successThreshold: 1
-  readinessProbe:
-    enabled: false
-    initialDelaySeconds: 5
-    timeoutSeconds: 3
-    periodSeconds: 5
-    failureThreshold: 3
-    successThreshold: 1
-  service:
-    name: slurmd-gpu-headless
-    ssh:
-      type: ClusterIP
-      port: 22
-      targetPort: 22
-    slurmd:
-      type: ClusterIP
-      port: 6818
-      targetPort: 6818
+    size: 10Gi
+    storageClass: "juicefs-tidb-oss-01"
+    existingClaim: ""
 slurmdbd:
-  name: slurmdbd
-  commonLabels: {}
   image:
     registry: docker-registry.lab.zverse.space
     repository: data-and-computing/slurm-slurmdbd
@@ -445,45 +63,11 @@ slurmdbd:
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
-  automountServiceAccountToken: false
-  podLabels: {}
+  resources: {}
   affinity: {}
-  podAnnotations: {}
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  hostNetwork: false
-  dnsPolicy: ""
-  dnsConfig: {}
-  hostIPC: false
-  priorityClassName: ""
   nodeSelector: {}
   tolerations: []
-  schedulerName: ""
-  topologySpreadConstraints: []
-  podSecurityContext:
-    enabled: true
-    fsGroupChangePolicy: Always
-    supplementalGroups: []
-    fsGroup: 0
-  terminationGracePeriodSeconds: ""
-  hostAliases: []
-  diagnosticMode:
-    enabled: false
-    command: []
-    args: []
-  extraEnvVars: []
-  extraEnvVarsCM: ""
-  extraEnvVarsSecret: ""
-  revisionHistoryLimit: 10
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate: {}
-  lifecycleHooks: {}
-  resources: {}
+  extraEnv: []
   extraVolumes: []
   extraVolumeMounts: []
   livenessProbe:
@@ -508,66 +92,64 @@ slurmdbd:
     failureThreshold: 3
     successThreshold: 1
   service:
-    name: slurmdbd-headless
-    ssh:
-      type: ClusterIP
-      port: 22
-      targetPort: 22
-    slurmdbd:
-      type: ClusterIP
-      port: 6819
-      targetPort: 6819
-login:
-  name: login
-  commonLabels: {}
+    type: ClusterIP
+    name: slurmdbd
+    port: 6819
+    targetPort: 6819
+slurmd:
+  image:
+    registry: docker-registry.lab.zverse.space
+    repository: data-and-computing/slurm-slurmd
+    tag: "intelmpi-250208-r0-lensing-v5.3"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  replicaCount: 3
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  lifecycleHooks: {}
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  service:
+    type: ClusterIP
+    port: 6819
+    name: slurmd
+    targetPort: 6819
+slurmcli:
   image:
     registry: docker-registry.lab.zverse.space
     repository: data-and-computing/slurm-login
-    tag: "25.05-open-mpi"
+    tag: "intelmpi-250208-r0-lensing-v4"
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
-  automountServiceAccountToken: false
-  podLabels: {}
+  resources: {}
   affinity: {}
-  podAnnotations: {}
-  podAffinityPreset: ""
-  podAntiAffinityPreset: soft
-  nodeAffinityPreset:
-    type: ""
-    key: ""
-    values: []
-  hostNetwork: false
-  dnsPolicy: ""
-  dnsConfig: {}
-  hostIPC: false
-  priorityClassName: ""
   nodeSelector: {}
   tolerations: []
-  schedulerName: ""
-  topologySpreadConstraints: []
-  podSecurityContext:
-    enabled: true
-    fsGroupChangePolicy: Always
-    supplementalGroups: []
-    fsGroup: 0
-  terminationGracePeriodSeconds: ""
-  hostAliases: []
-  command: []
-  args: []
-  diagnosticMode:
-    enabled: false
-    command: ["tail", "-f", "/etc/hosts"]
-    args: []
-  extraEnvVars: []
-  extraEnvVarsCM: ""
-  extraEnvVarsSecret: ""
-  revisionHistoryLimit: 10
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate: {}
-  lifecycleHooks: {}
-  resources: {}
+  extraEnv: []
   extraVolumes: []
   extraVolumeMounts: []
   livenessProbe:
@@ -592,86 +174,48 @@ login:
     failureThreshold: 3
     successThreshold: 1
   service:
-    name: login
-    ssh:
-      type: ClusterIP
-      port: 22
-      targetPort: 22
-      nodePort: ""
+    type: ClusterIP
+    port: 22
+    name: slurmcli
+    targetPort: 22
+munged:
+  image:
+    registry: docker-registry.lab.zverse.space
+    repository: data-and-computing/slurm-munged
+    tag: "25.05"
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  resources: {}
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+mariadb:
+  global:
+    security:
+      allowInsecureImages: true
+  image:
+    registry: m.daocloud.io/docker.io
+  auth:
+    rootPassword: "restricted"
+    database: slurm-cluster
+    username: "slurm"
+    password: "slurm"
+    existingSecret: ""
+  primary:
+    persistence:
+      storageClass: "juicefs-tidb-oss-01"
 
 serviceAccount:
-  automount: true
+  create: true
+  name: ""
   annotations: {}
-  name: "slurm"
-  role:
-    name: "slurm"
-  roleBinding:
-    name: "slurm"
+  automountServiceAccountToken: false
 
-configuration:
-  cgroup:
-    name: cgroup-conf
-    value: |-
-      CgroupPlugin=autodetect
-      IgnoreSystemd=yes
-      IgnoreSystemdOnFailure=yes
-      ConstrainCores=yes
-      ConstrainDevices=yes
-      ConstrainRAMSpace=yes
-      ConstrainSwapSpace=no
-  slurmConf: |-
-    DebugFlags=cgroup
-    SlurmdDebug=debug
-    ClusterName=slurm-cluster
-    SlurmctldHost={{ include "slurm.fullname" . }}-{{ .Values.slurmctld.name }}-0
-    MpiDefault=pmi2
-    ReturnToService=1
-    SlurmctldPidFile=/var/run/slurmctld.pid
-    SlurmctldPort={{ .Values.slurmctld.service.slurmctld.port }}
-    SlurmdPidFile=/var/run/slurmd.pid
-    SlurmdPort=6818
-    SlurmdSpoolDir=/var/spool/slurmd
-    SlurmUser=slurm
-    StateSaveLocation=/var/spool/slurmctld
-    TaskPlugin=task/affinity,task/cgroup
-    ProctrackType=proctrack/cgroup
-    InactiveLimit=0
-    KillWait=30
-    MinJobAge=300
-    SlurmctldTimeout=120
-    SlurmdTimeout=300
-    Waittime=0
-    SchedulerType=sched/backfill
-    SelectType=select/cons_tres
-    AccountingStorageHost={{ include "slurm.fullname" . }}-{{ .Values.slurmdbd.name }}-0
-    AccountingStoragePort={{ .Values.slurmdbd.service.slurmdbd.port }}
-    AccountingStorageType=accounting_storage/slurmdbd
-    AccountingStoreFlags=job_comment
-    JobAcctGatherType=jobacct_gather/linux
-    JobAcctGatherFrequency=30
-    SlurmctldDebug=info
-    SlurmctldLogFile=/var/log/slurm/slurmctld.log
-    SlurmdLogFile=/var/log/slurm/slurmd.log
-    NodeName={{ include "slurm.fullname" . }}-slurmd-cpu-[0-99] CPUs=2 Sockets=1 CoresPerSocket=2 ThreadsPerCore=1 RealMemory=2048 State=UNKNOWN
-    NodeName={{ include "slurm.fullname" . }}-slurmd-gpu-[0-99] CPUs=8 Sockets=1 CoresPerSocket=2 ThreadsPerCore=4 RealMemory=2048 State=UNKNOWN
-    PartitionName=compute Nodes=ALL Default=YES MaxTime=INFINITE State=UP
-  slurmdbdConf: |-
-    AuthType=auth/munge
-    AuthInfo=/var/run/munge/munge.socket.2
-    SlurmUser=slurm
-    DebugLevel=verbose
-    LogFile=/var/log/slurm/slurmdbd.log
-    PidFile=/var/run/slurmdbd.pid
-    DbdHost={{ include "slurm.fullname" . }}-{{ .Values.slurmdbd.name }}-0
-    DbdPort={{ .Values.slurmdbd.service.slurmdbd.port }}
-    StorageType=accounting_storage/mysql
-    StorageHost={{ .Release.Name }}-mariadb
-    StoragePort={{ .Values.mariadb.port }}
-    StoragePass={{ .Values.mariadb.auth.password }}
-    StorageUser={{ .Values.mariadb.auth.username }}
-    StorageLoc={{ .Values.mariadb.auth.database }}
-
-nameOverride: ""
-fullnameOverride: ""
-commonAnnotations: {}
-commonLabels: {}
+persistence:
+  enabled: true
+  annotations: {}
+  accessModes:
+    - ReadWriteMany
+  size: 10Gi
+  storageClass: "juicefs-tidb-oss-01"
+  existingClaim: ""

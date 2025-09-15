@@ -46,21 +46,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "slurm.serviceAccountName" -}}
-{{ default (include "slurm.fullname" .) .Values.serviceAccount.name }}
-{{- end }}
-
-{{/*
-Create the name of the role to use
-*/}}
-{{- define "slurm.roleName" -}}
-{{ default (include "slurm.fullname" .) .Values.serviceAccount.role.name }}
-{{- end }}
-
-{{/*
-Create the name of the rolebinding to use
-*/}}
-{{- define "slurm.roleBindingName" -}}
-{{ default (include "slurm.fullname" .) .Values.serviceAccount.roleBinding.name }}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (include "common.names.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
 {{- end }}
 
 {{/*

@@ -1,0 +1,20 @@
+{{- if and .Values.slurmctld.persistence.enabled (not .Values.slurmctld.persistence.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ printf "%s-slurmctld-state" (include "common.names.fullname" .) }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmctld.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.slurmctld.persistence.annotations }}
+  annotations: {{- toYaml .Values.slurmctld.persistence.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+  {{- range .Values.slurmctld.persistence.accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.slurmctld.persistence.size | quote }}
+  {{- include "common.storage.class" (dict "persistence" .Values.slurmctld.persistence "global" .Values.global) | nindent 2 }}
+{{- end -}}

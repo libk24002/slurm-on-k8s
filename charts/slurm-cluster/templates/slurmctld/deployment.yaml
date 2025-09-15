@@ -1,0 +1,148 @@
+apiVersion:  {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "slurm.fullname" . }}-slurmctld
+  namespace: cnconti
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.slurmctld.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.slurmctld.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.slurmctld.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.slurmctld.podLabels .Values.commonLabels ) "context" . ) }}
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
+      app.kubernetes.io/component: slurmctld
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
+        app.kubernetes.io/component: slurmctld
+      annotations:
+        kubectl.kubernetes.io/default-container: slurmctld
+    spec:
+      hostname: {{ include "common.names.fullname" . }}-slurmctld
+      automountServiceAccountToken: false
+      containers:
+      - image: "{{ .Values.munged.image.registry }}/{{ .Values.munged.image.repository }}:{{ .Values.munged.image.tag }}"
+        imagePullPolicy: {{ .Values.munged.image.pullPolicy }}
+        name: munged
+        {{- if .Values.munged.resources }}
+        resources: {{- toYaml .Values.munged.resources | nindent 12 }}
+        {{- end }}
+        resources: {}
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /run/munge
+          name: munge-socket-file
+      - image: "{{ .Values.slurmctld.image.registry }}/{{ .Values.slurmctld.image.repository }}:{{ .Values.slurmctld.image.tag }}"
+        imagePullPolicy: {{ .Values.slurmctld.image.pullPolicy }}
+        name: slurmctld
+        ports:
+        - containerPort: 22
+          name: ssh
+          protocol: TCP
+        - containerPort: 6817
+          name: slurmctld
+          protocol: TCP
+        {{- if .Values.slurmctld.resources }}
+        resources: {{- toYaml .Values.slurmctld.resources | nindent 12 }}
+        {{- end }}
+        securityContext:
+          privileged: true
+        volumeMounts:
+        # - mountPath: /root/.ssh
+        #   name: ssh-keys
+        #   readOnly: true
+        # - mountPath: /data
+        #   name: shared-storage
+        - mountPath: /etc/slurm/slurm.conf
+          name: slurm-conf-file
+          subPath: slurm.conf
+        # - mountPath: /etc/slurm/cgroup.conf
+        #   name: cgroup-conf-file
+        #   subPath: cgroup.conf
+        - mountPath: /run/munge
+          name: munge-socket-file
+        - name: slurmctld-state
+          mountPath: {{ .Values.slurmctld.persistence.mountPath }}
+        {{- if .Values.slurmctld.extraVolumeMounts }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.slurmctld.extraVolumeMounts "context" $) | nindent 12 }}
+        {{- end }}
+      initContainers:
+      - name: wait-for-slurmdbd
+        image: m.daocloud.io/docker.io/library/busybox:1.37.0-glibc
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+          - -c
+          - |
+            until nc -z {{ include "slurm.fullname" . }}-slurmdbd {{ .Values.slurmdbd.service.port }}; do
+              echo "waiting for slurmdbd...";
+              sleep 3;
+            done
+        resources: {}
+      - name: init-permission
+        image: docker.io/library/busybox:1.37.0-glibc
+        imagePullPolicy: IfNotPresent
+        command:
+          - sh
+          - -c
+          - chmod 755 /run/munge && chown 1108:1108 /run/munge
+        resources: {}
+        volumeMounts:
+        - mountPath: /run/munge
+          name: munge-socket-file
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 0
+        fsGroupChangePolicy: Always
+      serviceAccount: {{ include "slurm.serviceAccountName" . }}
+      serviceAccountName: {{ include "slurm.serviceAccountName" . }}
+      shareProcessNamespace: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+      # - name: ssh-keys
+      #   secret:
+      #     defaultMode: 420
+      #     items:
+      #     - key: id_rsa
+      #       mode: 256
+      #       path: id_rsa
+      #     - key: id_rsa.pub
+      #       mode: 444
+      #       path: id_rsa.pub
+      #     - key: authorized_keys
+      #       mode: 384
+      #       path: authorized_keys
+      #     secretName: slurm-ssh-keys
+      # - name: shared-storage
+      #   persistentVolumeClaim:
+      #     claimName: slurm-shared-storage
+      - configMap:
+          defaultMode: 420
+          name: {{ include "slurm.fullname" . }}-slurm-conf
+        name: slurm-conf-file
+      # - configMap:
+      #     defaultMode: 420
+      #     name: slurm-lensing-slurm-cgroup-conf
+      #   name: cgroup-conf-file
+      - emptyDir: {}
+        name: munge-socket-file
+      {{- if .Values.slurmctld.persistence.existingClaim }}
+      - name: slurmctld-state
+        persistentVolumeClaim:
+          claimName: {{ tpl .Values.slurmctld.persistence.existingClaim . | quote }}
+      {{- else if .Values.slurmctld.persistence.enabled }}
+      - name: slurmctld-state
+        persistentVolumeClaim:
+          claimName: {{ printf "%s-slurmctld-state" (include "common.names.fullname" .) | quote }}
+      {{- else if .Values.slurmctld.persistence.useEmptyDir }}
+      - name: slurmctld-state
+        emptyDir:
+          {{- if .Values.slurmctld.persistence.medium }}
+          medium: {{ .Values.slurmctld.persistence.medium | quote }}
+          {{- end }}
+      {{- end }}

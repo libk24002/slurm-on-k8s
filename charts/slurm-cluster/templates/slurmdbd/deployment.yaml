@@ -115,7 +115,7 @@ spec:
         #   secretName: slurm-ssh-keys
       - configMap:
           defaultMode: 420
-          name: {{ include "slurm.fullname" . }}-slurmdbd-conf
+          name: {{ include "common.names.fullname" . }}-slurmdbd-conf
         name: slurmdbd-conf-file
       # - configMap:
       #     defaultMode: 420

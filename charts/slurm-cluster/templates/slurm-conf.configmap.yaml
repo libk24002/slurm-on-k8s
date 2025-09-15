@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "slurm.fullname" . }}-slurm-conf
+  name: {{ include "common.names.fullname" . }}-slurm-conf
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
   {{- if .Values.commonAnnotations }}
@@ -12,8 +12,8 @@ data:
   slurm.conf: |-
     DebugFlags=cgroup
     SlurmdDebug=debug
-    ClusterName={{ include "slurm.fullname" . }}
-    SlurmctldHost={{ include "slurm.fullname" . }}-slurmctld
+    ClusterName={{ include "common.names.fullname" . }}
+    SlurmctldHost={{ include "common.names.fullname" . }}-slurmctld
     MpiDefault=pmi2
     ReturnToService=1
     SlurmctldPidFile=/var/run/slurmctld.pid
@@ -33,7 +33,7 @@ data:
     Waittime=0
     SchedulerType=sched/backfill
     SelectType=select/cons_tres
-    AccountingStorageHost={{ include "slurm.fullname" . }}-slurmdbd
+    AccountingStorageHost={{ include "common.names.fullname" . }}-slurmdbd
     AccountingStoragePort={{ .Values.slurmdbd.service.port }}
     AccountingStorageType=accounting_storage/slurmdbd
     AccountingStoreFlags=job_comment

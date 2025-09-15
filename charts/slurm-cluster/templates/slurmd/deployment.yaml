@@ -86,7 +86,7 @@ spec:
           - sh
           - -c
           - |
-            until nc -z {{ include "slurm.fullname" . }}-slurmctld {{ .Values.slurmctld.service.port }}; do
+            until nc -z {{ include "common.names.fullname" . }}-slurmctld {{ .Values.slurmctld.service.port }}; do
               echo "waiting for slurmctld...";
               sleep 3;
             done
@@ -130,14 +130,14 @@ spec:
       #     secretName: slurm-ssh-keys
       - name: slurm-workspace
         persistentVolumeClaim:
-          claimName: {{ include "slurm.fullname" . }}-slurm-workspace
+          claimName: {{ include "common.names.fullname" . }}-slurm-workspace
       - configMap:
           defaultMode: 420
-          name: {{ include "slurm.fullname" . }}-slurm-conf
+          name: {{ include "common.names.fullname" . }}-slurm-conf
         name: slurm-conf-file
       - configMap:
           defaultMode: 420
-          name: {{ include "slurm.fullname" . }}-cgroup-conf
+          name: {{ include "common.names.fullname" . }}-cgroup-conf
         name: cgroup-conf-file
       - emptyDir: {}
         name: munge-socket-file

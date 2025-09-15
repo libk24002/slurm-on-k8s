@@ -12,6 +12,7 @@ slurmctld:
     tag: "25.05"
     pullPolicy: IfNotPresent
     pullSecrets: []
+  initContainerImageRegistry: "m.lab.zverse.space/docker.io"
   replicaCount: 1
   resources: {}
   affinity: {}
@@ -55,6 +56,7 @@ slurmctld:
     size: 10Gi
     storageClass: "juicefs-tidb-oss-01"
     existingClaim: ""
+
 slurmdbd:
   image:
     registry: docker-registry.lab.zverse.space
@@ -62,6 +64,7 @@ slurmdbd:
     tag: "25.05"
     pullPolicy: IfNotPresent
     pullSecrets: []
+  initContainerImageRegistry: "m.lab.zverse.space/docker.io"
   replicaCount: 1
   resources: {}
   affinity: {}
@@ -96,6 +99,7 @@ slurmdbd:
     name: slurmdbd
     port: 6819
     targetPort: 6819
+
 slurmd:
   image:
     registry: docker-registry.lab.zverse.space
@@ -103,6 +107,7 @@ slurmd:
     tag: "intelmpi-250208-r0-lensing-v5.3"
     pullPolicy: IfNotPresent
     pullSecrets: []
+  initContainerImageRegistry: "m.lab.zverse.space/docker.io"
   replicaCount: 3
   affinity: {}
   nodeSelector: {}
@@ -134,9 +139,10 @@ slurmd:
     successThreshold: 1
   service:
     type: ClusterIP
-    port: 6819
+    port: 6818
     name: slurmd
-    targetPort: 6819
+    targetPort: 6818
+
 slurmcli:
   image:
     registry: docker-registry.lab.zverse.space
@@ -144,6 +150,7 @@ slurmcli:
     tag: "intelmpi-250208-r0-lensing-v4"
     pullPolicy: IfNotPresent
     pullSecrets: []
+  initContainerImageRegistry: "m.lab.zverse.space/docker.io"
   replicaCount: 1
   resources: {}
   affinity: {}
@@ -178,6 +185,7 @@ slurmcli:
     port: 22
     name: slurmcli
     targetPort: 22
+
 munged:
   image:
     registry: docker-registry.lab.zverse.space
@@ -187,12 +195,12 @@ munged:
     pullSecrets: []
   resources: {}
   extraEnv: []
-  extraVolumes: []
-  extraVolumeMounts: []
+
 mariadb:
   global:
     security:
       allowInsecureImages: true
+
   image:
     registry: m.daocloud.io/docker.io
   auth:
